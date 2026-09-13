@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apex Meca — Advanced Mechanical Design & 3D Engineering</title>
+  <meta name="description" content="Haytam Sallahi / Apex Meca — Mechanical CAD/CAM Designer & 3D Specialist. SolidWorks 3D modeling, surfacing and sheet-metal design." />
+  <link rel="icon" href="/assets/logos/logo-apexmeca.png" />
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body class="bg-void text-ink">
+
+  <!-- ============ HEADER ============ -->
+  <header id="site-header" class="fixed top-0 inset-x-0 z-50 border-b border-transparent transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-6 md:px-10 h-20 flex items-center justify-between">
+      <a href="#top" class="flex items-center gap-3 group">
+        <img src="/assets/logos/logo-apexmeca.png" alt="Apex Meca logo" class="h-8 w-8 object-contain" />
+        <span class="font-display text-lg tracking-tightish">
+          Apex Meca <span class="text-accent-bright font-mono text-xs align-middle">/AXM</span>
+        </span>
+      </a>
+
+      <nav id="nav-menu-desktop" class="hidden md:flex items-center gap-8">
+        <a href="#services" class="nav-link text-sm text-muted hover:text-ink transition-colors" data-i18n="nav.services">Services</a>
+        <a href="#toolset" class="nav-link text-sm text-muted hover:text-ink transition-colors" data-i18n="nav.toolset">Toolset</a>
+        <a href="#experience" class="nav-link text-sm text-muted hover:text-ink transition-colors" data-i18n="nav.experience">Experience</a>
+        <a href="#portfolio" class="nav-link text-sm text-muted hover:text-ink transition-colors" data-i18n="nav.portfolio">Portfolio</a>
+        <a href="#contact" class="nav-link text-sm text-muted hover:text-ink transition-colors" data-i18n="nav.contact">Contact</a>
+      </nav>
+
+      <div class="flex items-center gap-4">
+        <button id="language-toggle" data-i18n="controls.language" type="button" class="font-mono text-xs border border-line hover:border-accent-bright px-3 py-2 rounded-full transition-colors" aria-label="Switch to French">FR</button>
+        <button id="theme-toggle" type="button" class="w-9 h-9 border border-line hover:border-accent-bright rounded-full transition-colors" aria-label="Light mode">◐</button>
+        <a href="#contact" data-i18n="nav.project" class="hidden sm:inline-flex items-center border border-accent/50 hover:border-accent-bright hover:shadow-glow-sm transition-all text-sm px-4 py-2 rounded-full text-ink">
+          Start a project
+        </a>
+        <button id="nav-toggle" data-i18n-aria-label="controls.menu" aria-label="Toggle menu" aria-expanded="false" class="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5">
+          <span class="block w-5 h-px bg-ink"></span>
+          <span class="block w-5 h-px bg-ink"></span>
+        </button>
+      </div>
+    </div>
+    
+  </header>
+
+  <!-- Mobile dropdown menu -->
+  <div id="nav-menu-mobile" class="hidden md:hidden fixed top-20 inset-x-0 z-40 bg-void/95 backdrop-blur-md border-b border-line flex-col px-6 py-6 gap-5">
+    <a href="#services" data-i18n="nav.services" class="text-ink text-base">Services</a>
+    <a href="#toolset" data-i18n="nav.toolset" class="text-ink text-base">Toolset</a>
+    <a href="#experience" data-i18n="nav.experience" class="text-ink text-base">Experience</a>
+    <a href="#portfolio" data-i18n="nav.portfolio" class="text-ink text-base">Portfolio</a>
+    <a href="#contact" data-i18n="nav.contact" class="text-ink text-base">Contact</a>
+    <a href="/admin.html" data-i18n="nav.admin" class="text-muted font-mono text-sm">Admin</a>
+  </div>
+
+  <main id="top">
+    <!-- ============ HERO ============ -->
+    <section id="hero-section" class="relative min-h-screen flex items-center pt-24 pb-16 overflow-hidden">
+      <div class="max-w-7xl mx-auto px-6 md:px-10 w-full grid lg:grid-cols-12 gap-12 items-center z-10">
+        
+        <!-- Text Content -->
+        <div class="lg:col-span-7 space-y-6">
+          <p id="hero-eyebrow" data-i18n="hero.eyebrow" class="font-mono text-xs text-accent-bright uppercase tracking-widest">
+            Haytam Sallahi — Mechanical Design Studio
+          </p>
+          
+          <h1 id="hero-heading" class="font-display text-3xl sm:text-4xl lg:text-5xl font-normal text-ink leading-[1.15] tracking-tight">
+            Apex Meca — <br />
+            <span data-i18n="hero.title" class="text-transparent bg-clip-text bg-gradient-to-r from-ink via-ink to-accent-bright">
+              Advanced Mechanical Design & 3D Engineering
+            </span>
+          </h1>
+
+          <p id="hero-sub" data-i18n="hero.description" class="text-muted text-base sm:text-lg max-w-xl font-light leading-relaxed">
+            Specialist in SolidWorks 3D modeling, complex surfacing and sheet-metal design — turning mechanical concepts into manufacture-ready geometry.
+          </p>
+
+          <div id="hero-cta" class="pt-2 flex flex-wrap gap-4 items-center">
+            <a href="#portfolio" data-i18n="hero.portfolio" class="bg-ink text-void font-medium text-sm px-6 py-3 rounded-full hover:bg-accent-bright transition-all shadow-glow-sm">
+              View portfolio
+            </a>
+            <a href="#contact" data-i18n="hero.project" class="border border-line hover:border-accent/60 text-ink font-medium text-sm px-6 py-3 rounded-full transition-all glass">
+              Start a project
+            </a>
+          </div>
+        </div>
+
+        <!-- 3D Canvas Container -->
+        <div id="hero-canvas-wrap" class="lg:col-span-5 relative h-[min(72vw,450px)] min-h-[300px] w-full flex items-center justify-center">
+          <div class="absolute inset-0 border border-line/40 rounded-2xl bg-void/30 backdrop-blur-xs overflow-hidden">
+            <canvas id="hero-canvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="absolute bottom-6 left-1/2 -translate-x-1/2 font-mono text-[11px] text-muted uppercase tracking-widest animate-bounce">
+        <span data-i18n="hero.scroll">scroll ↓</span>
+      </div>
+    </section>
+
+    <!-- ============ SERVICES ============ -->
+    <section id="services" class="py-28 border-t border-line" data-reveal>
+      <div class="max-w-7xl mx-auto px-6 md:px-10">
+        <div class="max-w-xl mb-14">
+          <h2 data-i18n="sections.servicesTitle" class="font-display text-3xl sm:text-4xl">Services & specializations</h2>
+          <p data-i18n="sections.servicesDescription" class="text-muted mt-4">
+            One core discipline in active production today, with a roadmap into simulation and manufacturing programming.
+          </p>
+        </div>
+
+        <div id="services-grid" data-reveal-stagger class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
+      </div>
+    </section>
+
+    <!-- ============ TOOLSET ============ -->
+    <section id="toolset" class="py-28 border-t border-line" data-reveal>
+      <div class="max-w-7xl mx-auto px-6 md:px-10">
+        <div class="max-w-xl mb-14">
+          <h2 data-i18n="sections.toolsetTitle" class="font-display text-3xl sm:text-4xl">Software stack & toolset</h2>
+          <p data-i18n="sections.toolsetDescription" class="text-muted mt-4">The platforms this practice is built on, and the ones on the way.</p>
+        </div>
+        <div id="toolset-grid" data-reveal-stagger class="grid grid-cols-2 md:grid-cols-4 gap-5"></div>
+      </div>
+    </section>
+
+    <!-- ============ EXPERIENCE ============ -->
+    <section id="experience" class="py-28 border-t border-line" data-reveal>
+      <div class="max-w-7xl mx-auto px-6 md:px-10">
+        <div class="max-w-xl mb-14">
+          <h2 data-i18n="sections.experienceTitle" class="font-display text-3xl sm:text-4xl">Experience & certifications</h2>
+          <p data-i18n="sections.experienceDescription" class="text-muted mt-4">A working timeline of roles, diplomas and certificates.</p>
+        </div>
+        <div id="experience-timeline" data-reveal-stagger class="relative border-l border-line pl-8 space-y-10 max-w-2xl"></div>
+      </div>
+    </section>
+
+    <!-- ============ PORTFOLIO ============ -->
+    <section id="portfolio" class="py-28 border-t border-line" data-reveal>
+      <div class="max-w-7xl mx-auto px-6 md:px-10">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+          <div class="max-w-xl">
+            <h2 data-i18n="sections.portfolioTitle" class="font-display text-3xl sm:text-4xl">Portfolio</h2>
+            <p data-i18n="sections.portfolioDescription" class="text-muted mt-4">Models, surfacing studies, sheet-metal work and speed-modeling videos.</p>
+          </div>
+          <div id="portfolio-filters" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div id="portfolio-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </div>
+    </section>
+
+    <!-- ============ CONTACT ============ -->
+    <section id="contact" class="py-28 border-t border-line" data-reveal>
+      <div class="max-w-7xl mx-auto px-6 md:px-10 grid lg:grid-cols-2 gap-16">
+        <div>
+          <h2 data-i18n="sections.contactTitle" class="font-display text-3xl sm:text-4xl">Let's build something precise</h2>
+          <p id="contact-subtext" data-i18n="sections.contactDescription" class="text-muted mt-4 max-w-md">
+            Send a brief and reference files, or reach out directly through whichever channel suits you.
+          </p>
+
+          <div class="mt-8 flex flex-wrap gap-4">
+            <a data-social="email" href="mailto:sallahi.haytam.officiel@gmail.com" title="Email" class="w-12 h-12 rounded-lg glass border border-line flex items-center justify-center text-muted hover:text-accent-bright hover:border-accent-bright transition-all">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            </a>
+            <a data-social="whatsapp" href="https://wa.me/212681368537" target="_blank" rel="noopener" title="WhatsApp" class="w-12 h-12 rounded-lg glass border border-line flex items-center justify-center text-muted hover:text-accent-bright hover:border-accent-bright transition-all">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984 0 1.763.459 3.486 1.332 5.003L2 22l5.127-1.338a9.98 9.98 0 004.881 1.28c5.508 0 9.989-4.478 9.99-9.984A9.988 9.988 0 0012.012 2zm0 18.257c-1.528 0-3.024-.41-4.327-1.187l-.311-.186-3.218.84.858-3.134-.204-.326a8.236 8.236 0 01-1.26-4.28c.001-4.551 3.704-8.253 8.261-8.253 4.553 0 8.256 3.702 8.257 8.253 0 4.552-3.704 8.253-8.256 8.253z"/></svg>
+            </a>
+            <a data-social="linkedin" href="https://www.linkedin.com/in/haytam-sallahi-6440b5376/" target="_blank" rel="noopener" title="LinkedIn" class="w-12 h-12 rounded-lg glass border border-line flex items-center justify-center text-muted hover:text-accent-bright hover:border-accent-bright transition-all">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+            </a>
+            <a data-social="behance" href="https://www.behance.net/SallahiHaytam" target="_blank" rel="noopener" title="Behance" class="w-12 h-12 rounded-lg glass border border-line flex items-center justify-center text-muted hover:text-accent-bright hover:border-accent-bright transition-all">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M22 7h-7V5h7v2zm-1.708 3.844c-1.381 0-2.327.382-3.045 1.146-.717.763-1.076 1.838-1.076 3.224 0 1.428.36 2.518 1.078 3.27.719.753 1.708 1.13 2.966 1.13 1.161 0 2.052-.284 2.673-.852.622-.567.971-1.309 1.047-2.222h-2.072c-.089.413-.255.703-.498.87-.243.167-.57.251-.982.251-.555 0-.961-.161-1.218-.483-.257-.323-.393-.831-.409-1.523h5.275c.015-.152.023-.327.023-.523 0-1.312-.342-2.355-1.026-3.13-.684-.775-1.662-1.162-2.936-1.162zm-1.921 3.221c.063-.521.222-.897.477-1.129.255-.232.593-.348 1.014-.348.406 0 .736.115.99.346.254.231.411.608.472 1.131h-2.953zM8.384 13.149c.895-.227 1.549-.607 1.963-1.141.414-.533.621-1.227.621-2.082 0-.986-.339-1.745-1.018-2.277C9.271 7.118 8.232 6.852 6.832 6.852H1v12.296h6.096c1.478 0 2.571-.32 3.28-1.026.709-.706 1.064-1.621 1.064-2.745 0-.916-.239-1.636-.717-2.16-.478-.524-1.191-.88-2.139-1.068zM3.666 8.873h2.645c.66 0 1.136.115 1.428.344.292.229.438.583.438 1.062 0 .47-.142.827-.426 1.072-.284.245-.758.368-1.422.368H3.666V8.873zm3.12 8.257H3.666v-3.218h3.253c.731 0 1.258.143 1.58.428.322.285.483.708.483 1.269 0 .584-.162 1.019-.485 1.304-.323.285-.884.427-1.683.427z"/></svg>
+            </a>
+            <a data-social="facebook" href="https://www.facebook.com/apexmeca" target="_blank" rel="noopener" title="Facebook" class="w-12 h-12 rounded-lg glass border border-line flex items-center justify-center text-muted hover:text-accent-bright hover:border-accent-bright transition-all">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a data-social="fiverr" href="https://www.fiverr.com/mega_craft_3d/buying?source=avatar_menu_profile" target="_blank" rel="noopener" title="Fiverr" class="w-12 h-12 rounded-lg glass border border-line flex items-center justify-center text-muted hover:text-accent-bright hover:border-accent-bright font-display font-bold text-sm transition-all">
+              Fi
+            </a>
+          </div>
+        </div>
+
+        <form id="contact-form" class="glass rounded-lg p-8 space-y-5">
+          <div>
+            <label for="name" data-i18n="contact.name" class="block text-xs font-mono text-muted mb-2">Name</label>
+            <input id="name" name="name" type="text" required class="w-full bg-elevated border border-line rounded-md px-4 py-3 text-sm focus:border-accent-bright outline-none transition-colors" />
+          </div>
+          <div>
+            <label for="email" data-i18n="contact.email" class="block text-xs font-mono text-muted mb-2">Email</label>
+            <input id="email" name="email" type="email" required class="w-full bg-elevated border border-line rounded-md px-4 py-3 text-sm focus:border-accent-bright outline-none transition-colors" />
+          </div>
+          <div>
+            <label for="message" data-i18n="contact.details" class="block text-xs font-mono text-muted mb-2">Project details</label>
+            <textarea id="message" name="message" rows="5" required class="w-full bg-elevated border border-line rounded-md px-4 py-3 text-sm focus:border-accent-bright outline-none transition-colors resize-none"></textarea>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-3 pt-1">
+            <button type="button" data-contact-action="whatsapp" class="inline-flex items-center justify-center gap-2 bg-[#25D366] text-[#062b16] font-medium text-sm py-3 px-4 rounded-md hover:bg-[#20bd5c] transition-colors">
+              <svg aria-hidden="true" class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20.52 3.48A11.82 11.82 0 0012.06 0C5.53 0 .21 5.32.21 11.85c0 2.09.55 4.13 1.59 5.93L.11 24l6.36-1.67a11.84 11.84 0 005.59 1.42h.01c6.53 0 11.84-5.32 11.84-11.85 0-3.17-1.23-6.14-3.39-8.42zM12.07 21.7h-.01a9.83 9.83 0 01-5.01-1.37l-.36-.21-3.77.99 1.01-3.68-.23-.38a9.82 9.82 0 01-1.5-5.2C2.2 6.5 6.63 2.06 12.06 2.06a9.78 9.78 0 016.96 2.89 9.78 9.78 0 012.88 6.97c0 5.43-4.42 9.78-9.83 9.78zm5.39-7.35c-.3-.15-1.78-.88-2.05-.98-.27-.1-.47-.15-.67.15-.2.3-.77.98-.94 1.18-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.09 4.49.71.31 1.26.5 1.69.64.71.23 1.36.2 1.87.12.57-.09 1.78-.73 2.03-1.44.25-.71.25-1.32.17-1.45-.07-.13-.27-.2-.57-.35z" /></svg>
+              <span>Send via WhatsApp</span>
+            </button>
+            <button type="button" data-contact-action="email" class="inline-flex items-center justify-center gap-2 bg-slate-800 text-white font-medium text-sm py-3 px-4 rounded-md hover:bg-slate-700 transition-colors">
+              <svg aria-hidden="true" class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z" /></svg>
+              <span>Send via Email / Gmail</span>
+            </button>
+          </div>
+          <p id="contact-status" class="text-sm mt-1 min-h-[1.25rem]"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="border-t border-line py-10">
+    <div class="max-w-7xl mx-auto px-6 md:px-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="font-mono text-xs text-muted">© <span id="year"></span> Apex Meca — Haytam Sallahi</p>
+      <p class="font-mono text-xs text-muted">AXM · Mechanical CAD/CAM & 3D Design</p>
+    </div>
+  </footer>
+
+  <!-- ============ PORTFOLIO MODAL ============ -->
+  <div id="portfolio-modal" class="hidden fixed inset-0 z-[60] bg-void/90 backdrop-blur-sm items-center justify-center p-6">
+    <div class="glass rounded-lg max-w-3xl w-full overflow-hidden">
+      <div class="flex items-center justify-between p-5 border-b border-line">
+        <div>
+          <p id="portfolio-modal-category" class="font-mono text-[10px] text-accent-bright/80"></p>
+          <h3 id="portfolio-modal-title" class="font-display text-lg"></h3>
+        </div>
+        <button id="portfolio-modal-close" data-i18n-aria-label="contact.close" aria-label="Close" class="text-muted hover:text-ink text-2xl leading-none">&times;</button>
+      </div>
+      <div id="portfolio-modal-body" class="aspect-video bg-black"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
