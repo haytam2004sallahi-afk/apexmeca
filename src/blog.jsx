@@ -28,6 +28,14 @@ function BlogHeader() {
   );
 }
 
+function BlogFooter() {
+  return (
+    <footer className="border-t border-line px-6 py-8 text-center md:px-10">
+      <p className="font-mono text-xs text-muted">© {new Date().getFullYear()} Apex Meca — Haytam Sallahi</p>
+    </footer>
+  );
+}
+
 function TagList({ tags = [] }) {
   return <div className="blog-tags">{tags.map((tag) => <span className="blog-tag" key={tag}>{tag}</span>)}</div>;
 }
@@ -79,6 +87,7 @@ export function renderBlog() {
     <div className="blog-page">
       <BlogHeader />
       <main className="blog-shell">{slug ? <BlogPost post={post} /> : <BlogIndex posts={posts} />}</main>
+      <BlogFooter />
     </div>
   );
 }

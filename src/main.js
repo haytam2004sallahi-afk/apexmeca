@@ -117,7 +117,7 @@ function initHeroCanvas() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (window.location.pathname === '/blog' || window.location.pathname.startsWith('/blog/')) {
+  if (window.location.pathname.startsWith('/blog')) {
     import('./blog.jsx').then(({ renderBlog }) => renderBlog());
     return;
   }
