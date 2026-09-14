@@ -146,6 +146,15 @@ function openModal(item) {
     body.querySelectorAll('[data-gallery-thumb]').forEach((button) => button.classList.toggle('border-accent-bright', button === thumb));
     body.querySelectorAll('[data-gallery-thumb]').forEach((button) => button.classList.toggle('border-line', button !== thumb));
   }));
+  body.querySelector('[data-gallery-main]')?.addEventListener('click', (event) => {
+    const lightbox = document.getElementById('portfolio-lightbox');
+    const lightboxImage = document.getElementById('portfolio-lightbox-image');
+    if (!lightbox || !lightboxImage) return;
+    lightboxImage.src = event.currentTarget.src;
+    lightboxImage.alt = event.currentTarget.alt;
+    lightbox.classList.remove('hidden');
+    lightbox.classList.add('flex');
+  });
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -234,6 +243,13 @@ function closeModal() {
   modal.classList.remove('flex');
   if (body) body.innerHTML = '';
   document.body.style.overflow = '';
+}
+
+function closeLightbox() {
+  const lightbox = document.getElementById('portfolio-lightbox');
+  if (!lightbox) return;
+  lightbox.classList.add('hidden');
+  lightbox.classList.remove('flex');
 }
 
 function groupPortfolioItems(items) {
@@ -331,7 +347,11 @@ export async function initPortfolio({ getLocale = () => 'en' } = {}) {
   document.getElementById('portfolio-modal')?.addEventListener('click', (e) => {
     if (e.target.id === 'portfolio-modal') closeModal();
   });
+  document.getElementById('portfolio-lightbox')?.addEventListener('click', closeLightbox);
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') {
+      closeLightbox();
+      closeModal();
+    }
   });
 }

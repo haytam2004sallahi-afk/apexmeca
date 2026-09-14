@@ -159,11 +159,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('apex-meca-theme', theme);
     const toggle = document.getElementById('theme-toggle');
+    const logo = document.getElementById('site-logo');
     const labels = getLocalizedContent(locale).translations.controls;
     if (toggle) {
       toggle.textContent = theme === 'dark' ? '◐' : '●';
       toggle.setAttribute('aria-label', theme === 'dark' ? labels.themeLight : labels.themeDark);
     }
+    if (logo) logo.src = theme === 'dark' ? '/assets/logos/logo-apexmeca.png' : '/assets/logos/logo-apexmeca-dark.png';
   }
 
   renderTranslations(localized.translations, locale);

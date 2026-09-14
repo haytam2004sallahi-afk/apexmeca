@@ -97,6 +97,15 @@ body {
   overflow-x: hidden;
 }
 
+@media (max-width: 767px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+  #hero-section { padding-left: 1rem; padding-right: 1rem; }
+  #hero-section > .max-w-7xl { padding-left: 0; padding-right: 0; gap: 2rem; }
+  #hero-heading { font-size: clamp(2rem, 10vw, 2.75rem); overflow-wrap: anywhere; }
+  #hero-canvas-wrap { width: 100%; min-width: 0; height: min(84vw, 360px); }
+  #hero-canvas-wrap > div { max-width: 100%; }
+}
+
 h1, h2, h3, h4 {
   @apply font-display;
 }
@@ -202,6 +211,12 @@ h1, h2, h3, h4 {
   min-height: 260px;
   color: rgb(var(--color-muted));
   font: 11px 'JetBrains Mono', monospace;
+}
+
+[data-gallery-main] { cursor: zoom-in; }
+
+#portfolio-lightbox {
+  overscroll-behavior: contain;
 }
 
 ::-webkit-scrollbar {
