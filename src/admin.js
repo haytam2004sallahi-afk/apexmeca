@@ -5,6 +5,11 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJ
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = (id) => document.getElementById(id);
 const TABLES = { portfolio: 'portfolio', experience: 'experience', skills: 'skills', blog: 'blog_posts' };
+const normalizeTags = (tags) => Array.isArray(tags)
+  ? tags.map((tag) => String(tag).trim()).filter(Boolean)
+  : typeof tags === 'string'
+    ? tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+    : [];
 
 const loginView = $('login-view');
 const dashboardView = $('dashboard-view');
@@ -168,7 +173,7 @@ async function fetchBlogPosts() {
   }
   if (list) {
     list.innerHTML = (data || []).map((post) => `<article class="glass rounded-lg p-4 border border-line">
-      <div class="flex items-start justify-between gap-3"><div><p class="font-mono text-xs text-accent-bright">${post.published_at || 'Unscheduled'} · /blog/${post.slug}</p><h3 class="font-display text-lg">${post.title}</h3></div><span class="text-xs text-muted">${(post.tags || []).join(' · ')}</span></div>
+      <div class="flex items-start justify-between gap-3"><div><p class="font-mono text-xs text-accent-bright">${post.published_at || 'Unscheduled'} · /blog/${post.slug}</p><h3 class="font-display text-lg">${post.title}</h3></div><span class="text-xs text-muted">${normalizeTags(post.tags).join(' · ')}</span></div>
       <p class="text-sm text-muted mt-2 line-clamp-2">${post.excerpt || ''}</p><div class="flex gap-3 mt-3"><button data-edit-blog="${post.id}" class="text-xs text-accent-bright">Edit</button><button data-delete-blog="${post.id}" class="text-xs text-red-400">Delete</button></div>
     </article>`).join('') || '<p class="text-sm text-muted">No articles yet.</p>';
     list.querySelectorAll('[data-edit-blog]').forEach((button) => button.addEventListener('click', () => editBlogPost(button.dataset.editBlog)));
@@ -184,7 +189,7 @@ async function editBlogPost(id) {
   $('blog-title').value = post.title || '';
   $('blog-slug').value = post.slug || '';
   $('blog-date').value = post.published_at ? post.published_at.slice(0, 10) : '';
-  $('blog-tags').value = (post.tags || []).join(', ');
+  $('blog-tags').value = normalizeTags(post.tags).join(', ');
   $('blog-excerpt').value = post.excerpt || '';
   $('blog-cover-image').value = post.cover_image || '';
   $('blog-content').value = post.content || '';
@@ -193,7 +198,7 @@ async function editBlogPost(id) {
 }
 
 bindManagedForm({ form: 'blog-form', id: 'blog-id', table: TABLES.blog, status: 'blog-status', cancel: 'blog-cancel', list: fetchBlogPosts, fields: {
-  title: 'blog-title', slug: 'blog-slug', published_at: 'blog-date', tags: () => $('blog-tags').value.split(',').map((tag) => tag.trim()).filter(Boolean), excerpt: 'blog-excerpt', cover_image: 'blog-cover-image', content: 'blog-content',
+  title: 'blog-title', slug: 'blog-slug', published_at: 'blog-date', tags: () => normalizeTags($('blog-tags').value), excerpt: 'blog-excerpt', cover_image: 'blog-cover-image', content: 'blog-content',
 } });
 
 async function editPortfolioItem(id) {
