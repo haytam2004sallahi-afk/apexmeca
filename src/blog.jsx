@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import ReactMarkdown from 'react-markdown';
 import { parse as parseYaml } from 'yaml';
+import { supabase } from './lib/supabaseClient.js';
 
 const postModules = import.meta.glob('./content/posts/*.md', {
   eager: true,
@@ -15,14 +16,47 @@ function parsePost(source) {
   return { data: parseYaml(match[1]) || {}, content: match[2].trim() };
 }
 
-function loadPosts() {
+function normalizeSlug(value) {
+  return decodeURIComponent(String(value || ''))
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function normalizeTags(tags) {
+  return Array.isArray(tags)
+    ? tags.map((tag) => String(tag).trim()).filter(Boolean)
+    : typeof tags === 'string'
+      ? tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+      : [];
+}
+
+function loadStaticPosts() {
   return Object.entries(postModules).map(([path, source]) => {
     const rawSource = typeof source === 'string' ? source : source?.default;
     if (!rawSource) return null;
     const { data, content } = parsePost(rawSource);
-    const slug = path.split('/').pop().replace(/\.md$/, '');
-    return { ...data, content, slug };
+    const slug = normalizeSlug(path.split('/').pop().replace(/\.md$/, ''));
+    return { ...data, content, slug, tags: normalizeTags(data.tags), date: data.date || '' };
   }).filter(Boolean).sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+async function loadPosts() {
+  const fallbackPosts = loadStaticPosts();
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .select('id, title, slug, published_at, tags, excerpt, cover_image, content')
+    .order('published_at', { ascending: false });
+  if (error || !data?.length) return fallbackPosts;
+  return data.map((post) => ({
+    ...post,
+    slug: normalizeSlug(post.slug || post.title),
+    date: post.published_at || '',
+    description: post.excerpt || '',
+    coverImage: post.cover_image || '',
+    tags: normalizeTags(post.tags),
+  }));
 }
 
 function BlogHeader() {
@@ -49,7 +83,7 @@ function BlogFooter() {
 }
 
 function TagList({ tags = [] }) {
-  return <div className="blog-tags">{tags.map((tag) => <span className="blog-tag" key={tag}>{tag}</span>)}</div>;
+  return <div className="blog-tags">{normalizeTags(tags).map((tag) => <span className="blog-tag" key={tag}>{tag}</span>)}</div>;
 }
 
 function BlogIndex({ posts }) {
@@ -81,7 +115,7 @@ function BlogPost({ post }) {
   return (
     <article className="blog-post">
       <a className="blog-back !mt-0" href="/blog">← Back to all posts</a>
-      <p className="blog-post__meta">{post.date} / {post.tags?.join(' · ')}</p>
+      <p className="blog-post__meta">{post.date} / {normalizeTags(post.tags).join(' · ')}</p>
       <h1 className="text-white">{post.title}</h1>
       <p className="blog-post__description text-slate-200">{post.description}</p>
       <div className="markdown-body"><ReactMarkdown>{post.content}</ReactMarkdown></div>
@@ -89,16 +123,19 @@ function BlogPost({ post }) {
   );
 }
 
-export function renderBlog() {
-  const posts = loadPosts();
-  const slug = window.location.pathname.replace(/^\/blog\/?/, '').replace(/\/$/, '');
-  const post = slug ? posts.find((item) => item.slug === slug) : null;
-  document.title = post ? `${post.title} — Apex Meca` : 'Blog — Apex Meca';
+export async function renderBlog() {
+  const requestedSlug = window.location.pathname.replace(/^\/blog\/?/, '').replace(/\/$/, '');
   document.body.innerHTML = '<div id="blog-root"></div>';
-  createRoot(document.getElementById('blog-root')).render(
+  const root = createRoot(document.getElementById('blog-root'));
+  root.render(<div className="blog-page"><BlogHeader /><main className="blog-shell"><p className="blog-kicker">Loading field notes...</p></main><BlogFooter /></div>);
+  const posts = await loadPosts();
+  const slug = requestedSlug ? normalizeSlug(requestedSlug) : '';
+  const post = slug ? posts.find((item) => normalizeSlug(item.slug) === slug) : null;
+  document.title = post ? `${post.title} — Apex Meca` : 'Blog — Apex Meca';
+  root.render(
     <div className="blog-page">
       <BlogHeader />
-      <main className="blog-shell">{slug ? <BlogPost post={post} /> : <BlogIndex posts={posts} />}</main>
+      <main className="blog-shell">{requestedSlug ? <BlogPost post={post} /> : <BlogIndex posts={posts} />}</main>
       <BlogFooter />
     </div>
   );
