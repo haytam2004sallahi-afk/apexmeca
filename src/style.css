@@ -238,6 +238,7 @@ select:focus-visible {
 
 .blog-page {
   min-height: 100vh;
+  color: rgb(var(--color-ink));
   background:
     linear-gradient(115deg, rgb(var(--color-accent) / 0.06), transparent 38%),
     radial-gradient(circle at 85% 10%, rgb(var(--color-accent-bright) / 0.08), transparent 28%),
@@ -313,6 +314,14 @@ select:focus-visible {
 .blog-card p {
   color: rgb(var(--color-muted));
   line-height: 1.65;
+}
+
+.blog-empty {
+  margin-top: 4rem;
+  padding: 2rem;
+  border: 1px solid rgb(var(--color-line));
+  border-radius: 0.5rem;
+  background: rgb(var(--color-elevated) / 0.6);
 }
 
 .blog-tags {
