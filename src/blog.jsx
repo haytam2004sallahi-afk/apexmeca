@@ -27,9 +27,15 @@ function loadPosts() {
 
 function BlogHeader() {
   return (
-    <header className="flex items-center justify-between border-b border-line px-6 py-5 md:px-10">
+    <header className="blog-header">
       <a href="/" className="font-display text-lg tracking-tightish text-ink">Apex Meca <span className="font-mono text-xs text-accent-bright">/AXM</span></a>
-      <a href="/" className="font-mono text-xs uppercase tracking-widest text-muted hover:text-accent-bright">Back to studio</a>
+      <nav className="blog-nav" aria-label="Primary navigation">
+        <a href="/#services">Services</a>
+        <a href="/#portfolio">Portfolio</a>
+        <a href="/#toolset">Software</a>
+        <a href="/#contact">Contact</a>
+        <a href="/blog" aria-current="page">Blog</a>
+      </nav>
     </header>
   );
 }
@@ -70,11 +76,11 @@ function BlogIndex({ posts }) {
 
 function BlogPost({ post }) {
   if (!post) {
-    return <><p className="blog-kicker">404 / Not found</p><h1 className="blog-title text-white">This note does not exist.</h1><a className="blog-back" href="/blog">← All notes</a></>;
+    return <><p className="blog-kicker">404 / Not found</p><h1 className="blog-title text-white">This note does not exist.</h1><a className="blog-back" href="/blog">← Back to all posts</a></>;
   }
   return (
     <article className="blog-post">
-      <a className="blog-back !mt-0" href="/blog">← All notes</a>
+      <a className="blog-back !mt-0" href="/blog">← Back to all posts</a>
       <p className="blog-post__meta">{post.date} / {post.tags?.join(' · ')}</p>
       <h1 className="text-white">{post.title}</h1>
       <p className="blog-post__description text-slate-200">{post.description}</p>

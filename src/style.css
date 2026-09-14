@@ -245,6 +245,34 @@ select:focus-visible {
     rgb(var(--color-void));
 }
 
+.blog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.25rem clamp(1.5rem, 5vw, 2.5rem);
+  border-bottom: 1px solid rgb(var(--color-line));
+}
+
+.blog-nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2rem);
+  color: rgb(var(--color-muted));
+  font: 0.75rem 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.blog-nav a {
+  transition: color 0.2s ease;
+}
+
+.blog-nav a:hover,
+.blog-nav a[aria-current='page'] {
+  color: rgb(var(--color-accent-bright));
+}
+
 .blog-shell {
   max-width: 1120px;
   margin: 0 auto;
@@ -413,3 +441,18 @@ select:focus-visible {
 }
 
 .blog-back:hover { color: rgb(var(--color-accent-bright)); }
+
+@media (max-width: 700px) {
+  .blog-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .blog-nav {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.65rem;
+  }
+}
