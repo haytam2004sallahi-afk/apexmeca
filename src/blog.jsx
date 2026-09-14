@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import ReactMarkdown from 'react-markdown';
-import matter from 'gray-matter';
+import { parse as parseYaml } from 'yaml';
 
 const postModules = import.meta.glob('./content/posts/*.md', {
   eager: true,
@@ -9,11 +9,17 @@ const postModules = import.meta.glob('./content/posts/*.md', {
   import: 'default',
 });
 
+function parsePost(source) {
+  const match = source.match(/^---\s*\r?\n([\s\S]*?)\r?\n---\s*\r?\n([\s\S]*)$/);
+  if (!match) return { data: {}, content: source };
+  return { data: parseYaml(match[1]) || {}, content: match[2].trim() };
+}
+
 function loadPosts() {
   return Object.entries(postModules).map(([path, source]) => {
     const rawSource = typeof source === 'string' ? source : source?.default;
     if (!rawSource) return null;
-    const { data, content } = matter(rawSource);
+    const { data, content } = parsePost(rawSource);
     const slug = path.split('/').pop().replace(/\.md$/, '');
     return { ...data, content, slug };
   }).filter(Boolean).sort((a, b) => new Date(b.date) - new Date(a.date));
