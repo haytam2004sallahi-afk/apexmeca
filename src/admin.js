@@ -38,6 +38,7 @@ const itemTitle = $('item-title');
 const itemCategory = $('item-category');
 const itemMediaFiles = $('item-media-files');
 const itemImageUrl = $('item-image-url');
+const itemDocumentUrl = $('item-document-url');
 const itemModelUrl = $('item-model-url');
 const itemVideoUrl = $('item-video-url');
 const itemDescription = $('item-description');
@@ -100,6 +101,7 @@ async function savePortfolioItem() {
     category: itemCategory.value,
     video_url: itemVideoUrl.value.trim(),
     model_url: itemModelUrl.value.trim(),
+    document_url: itemDocumentUrl.value.trim() || null,
     description: itemDescription.value.trim(),
   };
   if (!base.title) throw new Error('A title is required.');
@@ -110,8 +112,8 @@ async function savePortfolioItem() {
     uploaded.push({ url: await uploadFile(file, uploadFolder), type: mediaType(file), name: file.name });
   }
   const displayFiles = uploaded.filter((file) => file.type !== 'asset');
-  if (!displayFiles.length && !itemImageUrl.value.trim() && !itemModelUrl.value.trim()) {
-    throw new Error('Select a visible media file or provide a media URL.');
+  if (!displayFiles.length && !itemImageUrl.value.trim() && !itemModelUrl.value.trim() && !itemDocumentUrl.value.trim() && !itemVideoUrl.value.trim()) {
+    throw new Error('Add a media file or a PDF, video, model, or cover URL.');
   }
   const pastedImageUrl = itemImageUrl.value.trim();
   const imageUrls = [...displayFiles.filter((file) => file.type === 'image').map((file) => file.url)];
@@ -124,7 +126,7 @@ async function savePortfolioItem() {
     image_url: firstImage,
     image_urls: imageUrls,
     model_url: model?.url || base.model_url,
-    document_url: document?.url || null,
+    document_url: document?.url || base.document_url,
     media_type: model ? 'model' : document ? 'document' : base.category === 'Videos' ? 'video' : 'image',
   };
 
@@ -224,6 +226,7 @@ async function editPortfolioItem(id) {
   itemTitle.value = data.title;
   itemCategory.value = data.category;
   itemImageUrl.value = data.image_url || '';
+  itemDocumentUrl.value = data.document_url || '';
   itemModelUrl.value = data.model_url || '';
   itemVideoUrl.value = data.video_url || '';
   itemDescription.value = data.description || '';

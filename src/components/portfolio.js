@@ -104,6 +104,13 @@ function openModal(item) {
   } catch {
     description = item.dataset.description || '';
   }
+  try {
+    const parsedDescription = JSON.parse(description);
+    if (parsedDescription && typeof parsedDescription === 'object') {
+      description = parsedDescription.description || parsedDescription.details || parsedDescription.overview || '';
+    }
+  } catch {
+  }
   const tags = item.dataset.tags ? item.dataset.tags.split('|').filter(Boolean) : [];
   let galleryUrls = [];
   try {
@@ -120,22 +127,20 @@ function openModal(item) {
     ? `<div class="flex gap-2 p-3 border-b border-line"><button type="button" data-media-tab="model" class="media-tab border border-accent-bright text-accent-bright rounded px-3 py-1.5 text-xs">3D Viewer</button><button type="button" data-media-tab="gallery" class="media-tab border border-line text-muted rounded px-3 py-1.5 text-xs">Image Gallery (${galleryUrls.length})</button></div>`
     : '';
   const modelMedia = modelUrl
-    ? `<div data-media-panel="model" class="model-modal-preview w-full min-h-[420px]" data-model-url="${modelUrl}"></div>`
+    ? isExternalEmbedUrl(modelUrl)
+      ? `<div data-media-panel="model" class="bg-black p-2 sm:p-4"><iframe src="${modelUrl}" title="${title} 3D viewer" class="w-full aspect-video min-h-[360px] rounded-md" loading="lazy" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe></div>`
+      : `<div data-media-panel="model" class="model-modal-preview w-full min-h-[420px]" data-model-url="${modelUrl}"></div>`
     : '';
   const galleryMedia = hasGallery
-    ? `<div data-media-panel="gallery" class="${modelUrl ? 'hidden' : ''} p-4"><div class="portfolio-gallery-stage aspect-video bg-black rounded-md overflow-hidden"><img data-gallery-main src="${galleryUrls[0]}" alt="${title}" class="w-full h-full object-contain" /></div><div class="flex gap-2 overflow-x-auto mt-3 pb-1">${galleryUrls.map((url, index) => `<button type="button" data-gallery-thumb="${index}" class="shrink-0 w-16 h-12 rounded border ${index === 0 ? 'border-accent-bright' : 'border-line'} overflow-hidden"><img src="${url}" alt="Preview ${index + 1}" class="w-full h-full object-cover" /></button>`).join('')}</div></div>`
+    ? `<div data-media-panel="gallery" class="${modelUrl ? 'hidden' : ''} p-4"><div data-gallery-stage class="portfolio-gallery-stage relative aspect-video bg-black rounded-md overflow-hidden"><img data-gallery-main src="${galleryUrls[0]}" alt="${title}" class="w-full h-full object-contain" /><button type="button" data-gallery-prev aria-label="Previous image" class="gallery-control gallery-control--prev">‹</button><button type="button" data-gallery-next aria-label="Next image" class="gallery-control gallery-control--next">›</button></div><div class="flex gap-2 overflow-x-auto mt-3 pb-1">${galleryUrls.map((url, index) => `<button type="button" data-gallery-thumb="${index}" class="shrink-0 w-16 h-12 rounded border ${index === 0 ? 'border-accent-bright' : 'border-line'} overflow-hidden"><img src="${url}" alt="Preview ${index + 1}" class="w-full h-full object-cover" /></button>`).join('')}</div></div>`
     : '';
-  const fallbackMedia = !modelUrl && !hasGallery
-    ? youtubeUrl
-      ? `<iframe src="${youtubeUrl}" title="${title}" class="w-full min-h-[420px]" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
-      : documentUrl
-      ? `<iframe src="${documentUrl}" title="${title}" class="w-full min-h-[420px]"></iframe>`
-      : isVideo
-      ? `<video src="${item.dataset.video}" controls autoplay class="w-full min-h-[420px] object-contain bg-black"></video>`
-      : ''
-    : '';
+  const supplementalMedia = [
+    youtubeUrl ? `<div class="p-4 border-t border-line"><iframe src="${youtubeUrl}" title="${title}" class="w-full aspect-video rounded-md bg-black" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : '',
+    documentUrl ? `<div class="p-4 border-t border-line"><iframe src="${documentUrl}" title="${title} PDF preview" class="w-full h-[60vh] min-h-[420px] rounded-md bg-white"></iframe><a href="${documentUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex mt-3 items-center rounded border border-accent-bright px-3 py-2 text-sm text-accent-bright hover:bg-accent/10">Download / Open PDF</a></div>` : '',
+    isVideo && !youtubeUrl ? `<div class="p-4 border-t border-line"><video src="${item.dataset.video}" controls class="w-full max-h-[60vh] object-contain bg-black"></video></div>` : '',
+  ].join('');
 
-  body.innerHTML = `${mediaTabs}${modelMedia}${galleryMedia}${fallbackMedia}`;
+  body.innerHTML = `${mediaTabs}${modelMedia}${galleryMedia}${supplementalMedia}`;
 
   body.insertAdjacentHTML('beforeend', `<div class="portfolio-modal-description border-t border-line p-5 bg-elevated"><p class="portfolio-description text-sm text-ink leading-relaxed"></p><div class="flex flex-wrap gap-2 mt-4">${tags.map((tag) => `<span class="text-xs border border-line rounded px-2 py-1 text-muted">${tag}</span>`).join('')}</div></div>`);
   const descriptionElement = body.querySelector('.portfolio-description');
@@ -152,14 +157,25 @@ function openModal(item) {
     tab.className = 'media-tab border border-accent-bright text-accent-bright rounded px-3 py-1.5 text-xs';
     body.querySelectorAll('[data-media-panel]').forEach((panel) => panel.classList.toggle('hidden', panel.dataset.mediaPanel !== tab.dataset.mediaTab));
   }));
-  body.querySelectorAll('[data-gallery-thumb]').forEach((thumb) => thumb.addEventListener('click', () => {
-    const index = Number(thumb.dataset.galleryThumb);
-    activeLightboxIndex = index;
+  const updateGallery = (index) => {
+    activeLightboxIndex = (index + galleryUrls.length) % galleryUrls.length;
     const main = body.querySelector('[data-gallery-main]');
-    if (main && galleryUrls[index]) main.src = galleryUrls[index];
-    body.querySelectorAll('[data-gallery-thumb]').forEach((button) => button.classList.toggle('border-accent-bright', button === thumb));
-    body.querySelectorAll('[data-gallery-thumb]').forEach((button) => button.classList.toggle('border-line', button !== thumb));
-  }));
+    if (main && galleryUrls[activeLightboxIndex]) main.src = galleryUrls[activeLightboxIndex];
+    body.querySelectorAll('[data-gallery-thumb]').forEach((button) => {
+      const selected = Number(button.dataset.galleryThumb) === activeLightboxIndex;
+      button.classList.toggle('border-accent-bright', selected);
+      button.classList.toggle('border-line', !selected);
+    });
+  };
+  body.querySelectorAll('[data-gallery-thumb]').forEach((thumb) => thumb.addEventListener('click', () => updateGallery(Number(thumb.dataset.galleryThumb))));
+  body.querySelector('[data-gallery-prev]')?.addEventListener('click', () => updateGallery(activeLightboxIndex - 1));
+  body.querySelector('[data-gallery-next]')?.addEventListener('click', () => updateGallery(activeLightboxIndex + 1));
+  let galleryTouchStartX = 0;
+  body.querySelector('[data-gallery-stage]')?.addEventListener('touchstart', (event) => { galleryTouchStartX = event.changedTouches[0]?.screenX || 0; }, { passive: true });
+  body.querySelector('[data-gallery-stage]')?.addEventListener('touchend', (event) => {
+    const delta = (event.changedTouches[0]?.screenX || 0) - galleryTouchStartX;
+    if (Math.abs(delta) > 45) updateGallery(activeLightboxIndex + (delta < 0 ? 1 : -1));
+  }, { passive: true });
   body.querySelector('[data-gallery-main]')?.addEventListener('click', (event) => {
     activeLightboxIndex = galleryUrls.indexOf(event.currentTarget.src);
     openLightbox();
@@ -202,6 +218,14 @@ function toYouTubeEmbedUrl(url) {
     if (!id && parsed.pathname.startsWith('/embed/')) id = parsed.pathname.split('/')[2];
     return id ? `https://www.youtube.com/embed/${id}` : '';
   } catch { return ''; }
+}
+
+function isExternalEmbedUrl(url) {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return /^https?:$/.test(parsed.protocol) && !/\.(glb|gltf)(\?.*)?$/i.test(parsed.pathname);
+  } catch { return false; }
 }
 
 function mountModelPreview(element) {

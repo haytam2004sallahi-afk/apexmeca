@@ -222,6 +222,24 @@ h1, h2, h3, h4 {
 
 .portfolio-modal-body { min-height: 0; }
 
+.gallery-control {
+  position: absolute;
+  top: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  transform: translateY(-50%);
+  border: 1px solid rgb(255 255 255 / 0.45);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.gallery-control:hover { background: rgb(var(--color-accent) / 0.6); }
+.gallery-control--prev { left: 0.75rem; }
+.gallery-control--next { right: 0.75rem; }
+
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -261,6 +279,8 @@ h1, h2, h3, h4 {
 }
 
 @media (max-width: 640px) {
+  .portfolio-modal-overlay { padding: 0; }
+  .portfolio-modal-panel { min-height: 90vh; max-height: 100vh; border-radius: 0; }
   .portfolio-modal-body { min-height: 0; }
   .lightbox-control { width: 2.5rem; height: 2.5rem; }
   .lightbox-control--prev { left: 0.5rem; }
