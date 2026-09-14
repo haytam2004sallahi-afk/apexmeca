@@ -215,8 +215,45 @@ h1, h2, h3, h4 {
 
 [data-gallery-main] { cursor: zoom-in; }
 
+.portfolio-modal-body { scrollbar-gutter: stable; }
+
+.lightbox-control {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  width: 3rem;
+  height: 3rem;
+  transform: translateY(-50%);
+  border: 1px solid rgb(255 255 255 / 0.35);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  font-size: 2.25rem;
+  line-height: 1;
+}
+
+.lightbox-control:hover { background: rgb(var(--color-accent) / 0.5); }
+.lightbox-control--prev { left: 1.25rem; }
+.lightbox-control--next { right: 1.25rem; }
+.lightbox-counter {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font: 0.75rem 'JetBrains Mono', monospace;
+}
+
 #portfolio-lightbox {
   overscroll-behavior: contain;
+}
+
+@media (max-width: 640px) {
+  .portfolio-modal-panel { max-height: 92vh; }
+  .portfolio-modal-body { min-height: 0; }
+  .lightbox-control { width: 2.5rem; height: 2.5rem; }
+  .lightbox-control--prev { left: 0.5rem; }
+  .lightbox-control--next { right: 0.5rem; }
 }
 
 ::-webkit-scrollbar {

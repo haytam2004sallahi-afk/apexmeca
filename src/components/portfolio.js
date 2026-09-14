@@ -6,6 +6,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 export const ASSEMBLY_MODEL_PATH = '/models/my-assembly.glb';
 
+let activeLightboxGallery = [];
+let activeLightboxIndex = 0;
+
 const PLACEHOLDER_ITEMS = [
   {
     id: 'placeholder-1',
@@ -103,6 +106,8 @@ function openModal(item) {
     galleryUrls = img ? [img] : [];
   }
   if (!galleryUrls.length && img) galleryUrls = [img];
+  activeLightboxGallery = galleryUrls;
+  activeLightboxIndex = 0;
 
   const hasGallery = galleryUrls.length > 0;
   const mediaTabs = modelUrl && hasGallery
@@ -141,24 +146,44 @@ function openModal(item) {
   }));
   body.querySelectorAll('[data-gallery-thumb]').forEach((thumb) => thumb.addEventListener('click', () => {
     const index = Number(thumb.dataset.galleryThumb);
+    activeLightboxIndex = index;
     const main = body.querySelector('[data-gallery-main]');
     if (main && galleryUrls[index]) main.src = galleryUrls[index];
     body.querySelectorAll('[data-gallery-thumb]').forEach((button) => button.classList.toggle('border-accent-bright', button === thumb));
     body.querySelectorAll('[data-gallery-thumb]').forEach((button) => button.classList.toggle('border-line', button !== thumb));
   }));
   body.querySelector('[data-gallery-main]')?.addEventListener('click', (event) => {
-    const lightbox = document.getElementById('portfolio-lightbox');
-    const lightboxImage = document.getElementById('portfolio-lightbox-image');
-    if (!lightbox || !lightboxImage) return;
-    lightboxImage.src = event.currentTarget.src;
-    lightboxImage.alt = event.currentTarget.alt;
-    lightbox.classList.remove('hidden');
-    lightbox.classList.add('flex');
+    activeLightboxIndex = galleryUrls.indexOf(event.currentTarget.src);
+    openLightbox();
   });
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
   document.body.style.overflow = 'hidden';
+}
+
+function openLightbox() {
+  const lightbox = document.getElementById('portfolio-lightbox');
+  if (!lightbox || !activeLightboxGallery.length) return;
+  updateLightbox();
+  lightbox.classList.remove('hidden');
+  lightbox.classList.add('flex');
+}
+
+function updateLightbox() {
+  const image = document.getElementById('portfolio-lightbox-image');
+  const counter = document.getElementById('portfolio-lightbox-counter');
+  const url = activeLightboxGallery[activeLightboxIndex];
+  if (!image || !url) return;
+  image.src = url;
+  image.alt = `Portfolio image ${activeLightboxIndex + 1}`;
+  if (counter) counter.textContent = `${activeLightboxIndex + 1} / ${activeLightboxGallery.length}`;
+}
+
+function navigateLightbox(direction) {
+  if (!activeLightboxGallery.length) return;
+  activeLightboxIndex = (activeLightboxIndex + direction + activeLightboxGallery.length) % activeLightboxGallery.length;
+  updateLightbox();
 }
 
 function toYouTubeEmbedUrl(url) {
@@ -250,6 +275,8 @@ function closeLightbox() {
   if (!lightbox) return;
   lightbox.classList.add('hidden');
   lightbox.classList.remove('flex');
+  activeLightboxGallery = [];
+  activeLightboxIndex = 0;
 }
 
 function groupPortfolioItems(items) {
@@ -348,10 +375,30 @@ export async function initPortfolio({ getLocale = () => 'en' } = {}) {
     if (e.target.id === 'portfolio-modal') closeModal();
   });
   document.getElementById('portfolio-lightbox')?.addEventListener('click', closeLightbox);
+  document.querySelector('[data-lightbox-prev]')?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    navigateLightbox(-1);
+  });
+  document.querySelector('[data-lightbox-next]')?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    navigateLightbox(1);
+  });
+  let touchStartX = 0;
+  document.getElementById('portfolio-lightbox')?.addEventListener('touchstart', (event) => {
+    touchStartX = event.changedTouches[0]?.screenX || 0;
+  }, { passive: true });
+  document.getElementById('portfolio-lightbox')?.addEventListener('touchend', (event) => {
+    const delta = (event.changedTouches[0]?.screenX || 0) - touchStartX;
+    if (Math.abs(delta) > 45) navigateLightbox(delta < 0 ? 1 : -1);
+  }, { passive: true });
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeLightbox();
       closeModal();
+    }
+    if (document.getElementById('portfolio-lightbox')?.classList.contains('flex')) {
+      if (e.key === 'ArrowLeft') navigateLightbox(-1);
+      if (e.key === 'ArrowRight') navigateLightbox(1);
     }
   });
 }
