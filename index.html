@@ -220,8 +220,8 @@
   </footer>
 
   <!-- ============ PORTFOLIO MODAL ============ -->
-  <div id="portfolio-modal" class="hidden fixed inset-0 z-[60] bg-void/90 backdrop-blur-sm items-center justify-center p-6">
-    <div class="portfolio-modal-panel glass rounded-lg max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+  <div id="portfolio-modal" class="portfolio-modal-overlay hidden z-[60] bg-void/90 backdrop-blur-sm items-start justify-center p-4 sm:p-6">
+    <div class="portfolio-modal-panel glass rounded-lg max-w-3xl w-full flex flex-col overflow-hidden">
       <div class="flex items-center justify-between p-5 border-b border-line">
         <div>
           <p id="portfolio-modal-category" class="font-mono text-[10px] text-accent-bright/80"></p>
@@ -229,7 +229,7 @@
         </div>
         <button id="portfolio-modal-close" data-i18n-aria-label="contact.close" aria-label="Close" class="text-muted hover:text-ink text-2xl leading-none">&times;</button>
       </div>
-      <div id="portfolio-modal-body" class="portfolio-modal-body aspect-video overflow-y-auto bg-black"></div>
+      <div id="portfolio-modal-body" class="portfolio-modal-body aspect-video bg-black"></div>
     </div>
   </div>
 

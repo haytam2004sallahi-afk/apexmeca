@@ -159,7 +159,6 @@ function openModal(item) {
 
   modal.classList.remove('hidden');
   modal.classList.add('flex');
-  document.body.style.overflow = 'hidden';
 }
 
 function openLightbox() {
@@ -267,7 +266,6 @@ function closeModal() {
   modal.classList.add('hidden');
   modal.classList.remove('flex');
   if (body) body.innerHTML = '';
-  document.body.style.overflow = '';
 }
 
 function closeLightbox() {
