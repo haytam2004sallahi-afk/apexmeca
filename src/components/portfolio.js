@@ -40,6 +40,7 @@ function cardTemplate(item, translations) {
   const isModel = item.media_type === 'model' || item.model_url || item.category === '3D Models' && item.file_type === 'model';
   const isVideo = item.category === 'Videos' && item.video_url;
   const isDocument = item.media_type === 'document' || item.document_url || item.category === 'Documents';
+  const description = item.description || item.details || item.overview || '';
   const categoryLabels = {
     All: translations.portfolio.all,
     '3D Models': translations.portfolio.models,
@@ -56,7 +57,7 @@ function cardTemplate(item, translations) {
       data-is-video="${Boolean(isVideo)}"
       data-model="${isModel ? item.model_url : ''}"
       data-document="${isDocument ? item.document_url : ''}"
-      data-description="${item.description || ''}"
+      data-description="${encodeURIComponent(description)}"
       data-tags="${(item.tags || []).join('|')}"
       data-gallery="${encodeURIComponent(JSON.stringify(item.image_urls || item.gallery_urls || []))}"
     >
@@ -97,7 +98,12 @@ function openModal(item) {
   const modelUrl = item.dataset.model;
   const documentUrl = item.dataset.document;
   const youtubeUrl = toYouTubeEmbedUrl(item.dataset.video);
-  const description = item.dataset.description;
+  let description = '';
+  try {
+    description = decodeURIComponent(item.dataset.description || '');
+  } catch {
+    description = item.dataset.description || '';
+  }
   const tags = item.dataset.tags ? item.dataset.tags.split('|').filter(Boolean) : [];
   let galleryUrls = [];
   try {
@@ -131,7 +137,9 @@ function openModal(item) {
 
   body.innerHTML = `${mediaTabs}${modelMedia}${galleryMedia}${fallbackMedia}`;
 
-  body.insertAdjacentHTML('beforeend', `<div class="border-t border-line p-5 bg-elevated"><p class="text-sm text-muted leading-relaxed">${description}</p><div class="flex flex-wrap gap-2 mt-4">${tags.map((tag) => `<span class="text-xs border border-line rounded px-2 py-1 text-muted">${tag}</span>`).join('')}</div></div>`);
+  body.insertAdjacentHTML('beforeend', `<div class="portfolio-modal-description border-t border-line p-5 bg-elevated"><p class="portfolio-description text-sm text-ink leading-relaxed"></p><div class="flex flex-wrap gap-2 mt-4">${tags.map((tag) => `<span class="text-xs border border-line rounded px-2 py-1 text-muted">${tag}</span>`).join('')}</div></div>`);
+  const descriptionElement = body.querySelector('.portfolio-description');
+  if (descriptionElement) descriptionElement.textContent = description || 'No description provided.';
 
   const modalTitle = document.getElementById('portfolio-modal-title');
   const modalCat = document.getElementById('portfolio-modal-category');
