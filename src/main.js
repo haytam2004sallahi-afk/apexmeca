@@ -118,6 +118,7 @@ function initHeroCanvas() {
 
 document.addEventListener('DOMContentLoaded', () => {
   if (window.location.pathname.startsWith('/blog')) {
+    document.body.innerHTML = '<div id="blog-root"></div>';
     import('./blog.jsx').then(({ renderBlog }) => renderBlog());
     return;
   }
