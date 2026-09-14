@@ -5,11 +5,27 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJ
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = (id) => document.getElementById(id);
 const TABLES = { portfolio: 'portfolio', experience: 'experience', skills: 'skills', blog: 'blog_posts' };
-const normalizeTags = (tags) => Array.isArray(tags)
-  ? tags.map((tag) => String(tag).trim()).filter(Boolean)
-  : typeof tags === 'string'
-    ? tags.split(',').map((tag) => tag.trim()).filter(Boolean)
-    : [];
+function normalizeTags(tags) {
+  let values = tags;
+  if (typeof tags === 'string') {
+    const value = tags.trim();
+    if (value.startsWith('[') && value.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(value);
+        values = Array.isArray(parsed) ? parsed : value;
+      } catch {
+        values = value.slice(1, -1);
+      }
+    }
+    if (typeof values === 'string') values = values.split(/\s*[·,]\s*/);
+  }
+  if (!Array.isArray(values)) values = values == null ? [] : [values];
+  return values.map((tag) => String(tag).trim().replace(/^['"]+|['"]+$/g, '')).filter(Boolean);
+}
+
+function formatTags(tags) {
+  return normalizeTags(tags).join(' · ');
+}
 
 const loginView = $('login-view');
 const dashboardView = $('dashboard-view');
@@ -173,7 +189,7 @@ async function fetchBlogPosts() {
   }
   if (list) {
     list.innerHTML = (data || []).map((post) => `<article class="glass rounded-lg p-4 border border-line">
-      <div class="flex items-start justify-between gap-3"><div><p class="font-mono text-xs text-accent-bright">${post.published_at || 'Unscheduled'} · /blog/${post.slug}</p><h3 class="font-display text-lg">${post.title}</h3></div><span class="text-xs text-muted">${normalizeTags(post.tags).join(' · ')}</span></div>
+      <div class="flex items-start justify-between gap-3"><div><p class="font-mono text-xs text-accent-bright">${post.published_at || 'Unscheduled'} · /blog/${post.slug}</p><h3 class="font-display text-lg">${post.title}</h3></div><span class="text-xs text-muted">${formatTags(post.tags)}</span></div>
       <p class="text-sm text-muted mt-2 line-clamp-2">${post.excerpt || ''}</p><div class="flex gap-3 mt-3"><button data-edit-blog="${post.id}" class="text-xs text-accent-bright">Edit</button><button data-delete-blog="${post.id}" class="text-xs text-red-400">Delete</button></div>
     </article>`).join('') || '<p class="text-sm text-muted">No articles yet.</p>';
     list.querySelectorAll('[data-edit-blog]').forEach((button) => button.addEventListener('click', () => editBlogPost(button.dataset.editBlog)));

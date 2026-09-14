@@ -25,11 +25,25 @@ function normalizeSlug(value) {
 }
 
 function normalizeTags(tags) {
-  return Array.isArray(tags)
-    ? tags.map((tag) => String(tag).trim()).filter(Boolean)
-    : typeof tags === 'string'
-      ? tags.split(',').map((tag) => tag.trim()).filter(Boolean)
-      : [];
+  let values = tags;
+  if (typeof tags === 'string') {
+    const value = tags.trim();
+    if (value.startsWith('[') && value.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(value);
+        values = Array.isArray(parsed) ? parsed : value;
+      } catch {
+        values = value.slice(1, -1);
+      }
+    }
+    if (typeof values === 'string') values = values.split(/\s*[·,]\s*/);
+  }
+  if (!Array.isArray(values)) values = values == null ? [] : [values];
+  return values.map((tag) => String(tag).trim().replace(/^['"]+|['"]+$/g, '')).filter(Boolean);
+}
+
+function formatTags(tags) {
+  return normalizeTags(tags).join(' · ');
 }
 
 function loadStaticPosts() {
@@ -96,7 +110,7 @@ function BlogIndex({ posts }) {
         <div className="blog-grid">
           {posts.map((post) => (
             <a className="blog-card text-white" href={`/blog/${post.slug}`} key={post.slug}>
-              <span className="blog-card__meta">{post.date} / {post.tags?.[0] || 'Design notes'}</span>
+              <span className="blog-card__meta">{post.date} / {formatTags(post.tags) || 'Design notes'}</span>
               <h2>{post.title}</h2>
               <p className="text-slate-200">{post.description}</p>
               <TagList tags={post.tags} />
@@ -115,7 +129,7 @@ function BlogPost({ post }) {
   return (
     <article className="blog-post">
       <a className="blog-back !mt-0" href="/blog">← Back to all posts</a>
-      <p className="blog-post__meta">{post.date} / {normalizeTags(post.tags).join(' · ')}</p>
+      <p className="blog-post__meta">{post.date} / {formatTags(post.tags)}</p>
       <h1 className="text-white">{post.title}</h1>
       <p className="blog-post__description text-slate-200">{post.description}</p>
       <div className="markdown-body"><ReactMarkdown>{post.content}</ReactMarkdown></div>
