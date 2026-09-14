@@ -114,6 +114,7 @@
       <nav class="space-y-1">
         <button data-admin-tab="overview" class="admin-nav-link active w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-left"><span>⌂</span><span class="admin-sidebar-label">Overview</span></button>
         <button data-admin-tab="portfolio" class="admin-nav-link w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-left"><span>◈</span><span class="admin-sidebar-label">Portfolio</span><b id="portfolio-count" class="ml-auto text-[10px] text-muted">0</b></button>
+        <button data-admin-tab="blog" class="admin-nav-link w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-left"><span>✎</span><span class="admin-sidebar-label">Articles / Blog</span><b id="blog-count" class="ml-auto text-[10px] text-muted">0</b></button>
         <button data-admin-tab="services" class="admin-nav-link w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-left"><span>⌘</span><span class="admin-sidebar-label">Services</span></button>
         <button data-admin-tab="software" class="admin-nav-link w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-left"><span>▦</span><span class="admin-sidebar-label">Software</span></button>
         <button data-admin-tab="social" class="admin-nav-link w-full flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-left"><span>↗</span><span class="admin-sidebar-label">Social & contact</span></button>
@@ -140,6 +141,7 @@
 
     <nav id="admin-tabs" class="hidden flex-wrap gap-2 mb-8 border-b border-line pb-3" aria-label="Admin sections">
       <button data-admin-tab="portfolio" class="admin-tab active px-3 py-2 rounded-md border border-accent-bright text-accent-bright text-sm">Portfolio</button>
+      <button data-admin-tab="blog" class="admin-tab px-3 py-2 rounded-md border border-line text-muted text-sm">Articles / Blog</button>
       <button data-admin-tab="services" class="admin-tab px-3 py-2 rounded-md border border-line text-muted text-sm">Services</button>
       <button data-admin-tab="software" class="admin-tab px-3 py-2 rounded-md border border-line text-muted text-sm">Software</button>
       <button data-admin-tab="social" class="admin-tab px-3 py-2 rounded-md border border-line text-muted text-sm">Social & contact</button>
@@ -203,6 +205,23 @@
       <div>
         <div class="flex flex-wrap gap-2 mb-4"><input id="portfolio-search" placeholder="Search projects..." class="admin-input max-w-sm" /><select id="portfolio-filter" class="admin-input max-w-[170px]"><option value="">All categories</option><option>3D Models</option><option>Surfacing</option><option>Sheet Metal</option><option>Videos</option><option>Documents</option></select></div><div id="admin-items-list" class="grid sm:grid-cols-2 gap-4"></div>
       </div>
+    </div>
+
+    <div data-admin-panel="blog" class="admin-panel hidden grid lg:grid-cols-[380px_1fr] gap-10">
+      <form id="blog-form" class="glass rounded-lg p-6 space-y-4 h-fit">
+        <h2 class="font-display text-lg">Blog article</h2>
+        <input type="hidden" id="blog-id" />
+        <input id="blog-title" required placeholder="Article title" class="admin-input" />
+        <input id="blog-slug" required placeholder="url-slug" class="admin-input" />
+        <input id="blog-date" type="date" required class="admin-input" />
+        <input id="blog-tags" placeholder="Tags, comma separated" class="admin-input" />
+        <textarea id="blog-excerpt" rows="3" placeholder="Excerpt / description" class="admin-input"></textarea>
+        <input id="blog-cover-image" placeholder="Cover image URL" class="admin-input" />
+        <textarea id="blog-content" rows="12" required placeholder="Markdown content" class="admin-input"></textarea>
+        <div class="flex gap-3"><button type="submit" class="flex-1 bg-ink text-void py-2.5 rounded-md text-sm">Save article</button><button type="button" id="blog-cancel" class="hidden px-4 border border-line rounded-md text-sm">Cancel</button></div>
+        <p id="blog-status" class="text-sm min-h-[1.25rem]"></p>
+      </form>
+      <div><input id="blog-search" placeholder="Search articles..." class="admin-input mb-3" /><div id="admin-blog-list" class="space-y-3"></div></div>
     </div>
 
     <div data-admin-panel="services" class="admin-panel hidden grid lg:grid-cols-[380px_1fr] gap-10">

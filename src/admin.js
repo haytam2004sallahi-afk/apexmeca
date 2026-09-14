@@ -4,7 +4,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://dpdebudbbpbpv
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZGVidWRiYnBicHZnaHl1d3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0OTk3NjksImV4cCI6MjA3NzA3NTc2OX0.iCTa5sZUc696kUjeCaCRxhdUM91KkXe_wpKC4uQcYwY';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = (id) => document.getElementById(id);
-const TABLES = { portfolio: 'portfolio', experience: 'experience', skills: 'skills' };
+const TABLES = { portfolio: 'portfolio', experience: 'experience', skills: 'skills', blog: 'blog_posts' };
 
 const loginView = $('login-view');
 const dashboardView = $('dashboard-view');
@@ -159,6 +159,43 @@ async function fetchPortfolioItems() {
   $('overview-projects').textContent = data?.length || 0;
 }
 
+async function fetchBlogPosts() {
+  const { data, error } = await supabase.from(TABLES.blog).select('*').order('publish_date', { ascending: false });
+  const list = $('admin-blog-list');
+  if (error) {
+    if (list) list.innerHTML = `<p class="text-red-500">${error.message}</p>`;
+    return;
+  }
+  if (list) {
+    list.innerHTML = (data || []).map((post) => `<article class="glass rounded-lg p-4 border border-line">
+      <div class="flex items-start justify-between gap-3"><div><p class="font-mono text-xs text-accent-bright">${post.publish_date || 'Unscheduled'} · /blog/${post.slug}</p><h3 class="font-display text-lg">${post.title}</h3></div><span class="text-xs text-muted">${(post.tags || []).join(' · ')}</span></div>
+      <p class="text-sm text-muted mt-2 line-clamp-2">${post.excerpt || ''}</p><div class="flex gap-3 mt-3"><button data-edit-blog="${post.id}" class="text-xs text-accent-bright">Edit</button><button data-delete-blog="${post.id}" class="text-xs text-red-400">Delete</button></div>
+    </article>`).join('') || '<p class="text-sm text-muted">No articles yet.</p>';
+    list.querySelectorAll('[data-edit-blog]').forEach((button) => button.addEventListener('click', () => editBlogPost(button.dataset.editBlog)));
+    list.querySelectorAll('[data-delete-blog]').forEach((button) => button.addEventListener('click', () => deleteRecord(TABLES.blog, button.dataset.deleteBlog, fetchBlogPosts)));
+  }
+  $('blog-count').textContent = data?.length || 0;
+}
+
+async function editBlogPost(id) {
+  const { data: post } = await supabase.from(TABLES.blog).select('*').eq('id', id).single();
+  if (!post) return;
+  $('blog-id').value = post.id;
+  $('blog-title').value = post.title || '';
+  $('blog-slug').value = post.slug || '';
+  $('blog-date').value = post.publish_date || '';
+  $('blog-tags').value = (post.tags || []).join(', ');
+  $('blog-excerpt').value = post.excerpt || '';
+  $('blog-cover-image').value = post.cover_image_url || '';
+  $('blog-content').value = post.content || '';
+  $('blog-cancel').classList.remove('hidden');
+  $('blog-title').focus();
+}
+
+bindManagedForm({ form: 'blog-form', id: 'blog-id', table: TABLES.blog, status: 'blog-status', cancel: 'blog-cancel', list: fetchBlogPosts, fields: {
+  title: 'blog-title', slug: 'blog-slug', publish_date: 'blog-date', tags: () => $('blog-tags').value.split(',').map((tag) => tag.trim()).filter(Boolean), excerpt: 'blog-excerpt', cover_image_url: 'blog-cover-image', content: 'blog-content',
+} });
+
 async function editPortfolioItem(id) {
   const { data } = await supabase.from(TABLES.portfolio).select('*').eq('id', id).single();
   if (!data) return;
@@ -266,7 +303,7 @@ bindCrudForm({ form: 'experience-form', ids: 'experience-id', table: TABLES.expe
 bindCrudForm({ form: 'skill-form', ids: 'skill-id', table: TABLES.skills, list: fetchSkills, status: 'skill-status', cancel: 'skill-cancel', fields: { name: 'skill-name', category: 'skill-category', logo_url: 'skill-logo-url' } });
 
 async function refreshDashboard() {
-  await Promise.all([fetchPortfolioItems(), fetchExperience(), fetchSkills(), fetchServices(), fetchSoftware(), fetchSocialLinks(), fetchAnalytics()]);
+  await Promise.all([fetchPortfolioItems(), fetchBlogPosts(), fetchExperience(), fetchSkills(), fetchServices(), fetchSoftware(), fetchSocialLinks(), fetchAnalytics()]);
 }
 
 function initAdminTabs() {
@@ -370,6 +407,7 @@ function initListFilters() {
     input?.addEventListener('input', apply); select?.addEventListener('change', apply);
   };
   filterList('portfolio-search', 'admin-items-list', 'portfolio-filter');
+  filterList('blog-search', 'admin-blog-list');
   filterList('experience-search', 'admin-experience-list');
   filterList('skills-search', 'admin-skills-list');
   filterList('services-search', 'admin-services-list');
