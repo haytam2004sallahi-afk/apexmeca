@@ -117,6 +117,11 @@ function initHeroCanvas() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (window.location.pathname === '/blog' || window.location.pathname.startsWith('/blog/')) {
+    import('./blog.jsx').then(({ renderBlog }) => renderBlog());
+    return;
+  }
+
   let locale = localStorage.getItem('apex-meca-locale') || 'en';
   let theme = localStorage.getItem('apex-meca-theme') || 'dark';
   const localized = getLocalizedContent(locale);
