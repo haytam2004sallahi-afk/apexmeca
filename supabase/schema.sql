@@ -14,6 +14,11 @@ create table if not exists public.portfolio (
   video_url text,
   model_url text,
   document_url text,
+  material text,
+  software text,
+  manufacturing_method text,
+  file_type text,
+  allow_download boolean not null default false,
   media_type text not null default 'image',
   description text,
   image_urls jsonb not null default '[]'::jsonb,
@@ -24,6 +29,11 @@ create table if not exists public.portfolio (
 
 alter table public.portfolio add column if not exists model_url text;
 alter table public.portfolio add column if not exists document_url text;
+alter table public.portfolio add column if not exists material text;
+alter table public.portfolio add column if not exists software text;
+alter table public.portfolio add column if not exists manufacturing_method text;
+alter table public.portfolio add column if not exists file_type text;
+alter table public.portfolio add column if not exists allow_download boolean not null default false;
 alter table public.portfolio add column if not exists media_type text not null default 'image';
 alter table public.portfolio add column if not exists image_urls jsonb not null default '[]'::jsonb;
 alter table public.portfolio add column if not exists tags text[] not null default '{}';

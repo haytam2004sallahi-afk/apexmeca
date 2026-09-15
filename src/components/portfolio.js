@@ -59,6 +59,11 @@ function cardTemplate(item, translations) {
       data-document="${isDocument ? item.document_url : ''}"
       data-description="${encodeURIComponent(description)}"
       data-tags="${(item.tags || []).join('|')}"
+      data-material="${item.material || ''}"
+      data-software="${item.software || ''}"
+      data-manufacturing="${item.manufacturing_method || ''}"
+      data-file-type="${item.file_type || ''}"
+      data-allow-download="${item.allow_download === true}"
       data-gallery="${encodeURIComponent(JSON.stringify(item.image_urls || item.gallery_urls || []))}"
     >
       <div class="portfolio-media aspect-[4/3] overflow-hidden bg-elevated relative">
@@ -112,6 +117,13 @@ function openModal(item) {
   } catch {
   }
   const tags = item.dataset.tags ? item.dataset.tags.split('|').filter(Boolean) : [];
+  const metadata = [
+    ['Material', item.dataset.material],
+    ['Software', item.dataset.software],
+    ['Manufacturing', item.dataset.manufacturing],
+    ['File type', item.dataset.fileType],
+  ].filter(([, value]) => value);
+  const allowDownload = item.dataset.allowDownload === 'true';
   let galleryUrls = [];
   try {
     galleryUrls = JSON.parse(decodeURIComponent(item.dataset.gallery || '[]')).filter(Boolean);
@@ -128,21 +140,21 @@ function openModal(item) {
     : '';
   const modelMedia = modelUrl
     ? isExternalEmbedUrl(modelUrl)
-      ? `<div data-media-panel="model" class="bg-black p-2 sm:p-4"><iframe src="${modelUrl}" title="${title} 3D viewer" class="w-full aspect-video min-h-[360px] rounded-md" loading="lazy" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe></div>`
-      : `<div data-media-panel="model" class="model-modal-preview w-full min-h-[420px]" data-model-url="${modelUrl}"></div>`
+      ? `<div data-media-panel="model" class="portfolio-media-stage aspect-[4/3] md:aspect-video w-full bg-black p-2 sm:p-4"><iframe src="${modelUrl}" title="${title} 3D viewer" class="w-full h-full rounded-md" loading="lazy" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe></div>`
+      : `<div data-media-panel="model" class="portfolio-media-stage model-modal-preview aspect-[4/3] md:aspect-video w-full" data-model-url="${modelUrl}"></div>`
     : '';
   const galleryMedia = hasGallery
-    ? `<div data-media-panel="gallery" class="${modelUrl ? 'hidden' : ''} p-4"><div data-gallery-stage class="portfolio-gallery-stage relative aspect-video bg-black rounded-md overflow-hidden"><img data-gallery-main src="${galleryUrls[0]}" alt="${title}" class="w-full h-full object-contain" /><button type="button" data-gallery-prev aria-label="Previous image" class="gallery-control gallery-control--prev">‹</button><button type="button" data-gallery-next aria-label="Next image" class="gallery-control gallery-control--next">›</button></div><div class="flex gap-2 overflow-x-auto mt-3 pb-1">${galleryUrls.map((url, index) => `<button type="button" data-gallery-thumb="${index}" class="shrink-0 w-16 h-12 rounded border ${index === 0 ? 'border-accent-bright' : 'border-line'} overflow-hidden"><img src="${url}" alt="Preview ${index + 1}" class="w-full h-full object-cover" /></button>`).join('')}</div></div>`
+    ? `<div data-media-panel="gallery" class="${modelUrl ? 'hidden' : ''} portfolio-media-stage w-full p-3 sm:p-4"><div data-gallery-stage class="portfolio-gallery-stage relative aspect-[4/3] md:aspect-video bg-black rounded-md overflow-hidden"><img data-gallery-main src="${galleryUrls[0]}" alt="${title}" class="w-full h-full object-contain" /><button type="button" data-gallery-prev aria-label="Previous image" class="gallery-control gallery-control--prev">‹</button><button type="button" data-gallery-next aria-label="Next image" class="gallery-control gallery-control--next">›</button></div><div class="grid grid-flow-col auto-cols-[4.5rem] sm:auto-cols-[5.5rem] gap-2 overflow-x-auto mt-3 pb-1">${galleryUrls.map((url, index) => `<button type="button" data-gallery-thumb="${index}" class="shrink-0 aspect-[4/3] rounded border ${index === 0 ? 'border-accent-bright' : 'border-line'} overflow-hidden transition hover:border-accent-bright/70"><img src="${url}" alt="Preview ${index + 1}" class="w-full h-full object-cover" /></button>`).join('')}</div></div>`
     : '';
   const supplementalMedia = [
-    youtubeUrl ? `<div class="p-4 border-t border-line"><iframe src="${youtubeUrl}" title="${title}" class="w-full aspect-video rounded-md bg-black" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : '',
-    documentUrl ? `<div class="p-4 border-t border-line"><iframe src="${documentUrl}" title="${title} PDF preview" class="w-full h-[60vh] min-h-[420px] rounded-md bg-white"></iframe><a href="${documentUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex mt-3 items-center rounded border border-accent-bright px-3 py-2 text-sm text-accent-bright hover:bg-accent/10">Download / Open PDF</a></div>` : '',
-    isVideo && !youtubeUrl ? `<div class="p-4 border-t border-line"><video src="${item.dataset.video}" controls class="w-full max-h-[60vh] object-contain bg-black"></video></div>` : '',
+    youtubeUrl ? `<div class="portfolio-media-stage aspect-[4/3] md:aspect-video w-full border-t border-line p-3 sm:p-4"><iframe src="${youtubeUrl}" title="${title}" class="w-full h-full rounded-md bg-black" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : '',
+    documentUrl ? `<div class="portfolio-media-stage w-full border-t border-line p-3 sm:p-4"><iframe src="${documentUrl}" title="${title} PDF preview" class="w-full aspect-[4/3] md:aspect-video max-h-[50vh] rounded-md bg-white"></iframe><div class="mt-3 flex items-center justify-between gap-3 rounded-lg border border-line bg-elevated p-3"><div><p class="text-xs font-mono uppercase tracking-widest text-accent-bright">PDF document</p><p class="text-sm text-ink">Preview blocked? Open the source document.</p></div><a href="${documentUrl}" target="_blank" rel="noopener noreferrer" class="shrink-0 rounded border border-accent-bright px-3 py-2 text-xs text-accent-bright hover:bg-accent/10">View PDF Document</a></div></div>` : '',
+    isVideo && !youtubeUrl ? `<div class="portfolio-media-stage aspect-[4/3] md:aspect-video w-full border-t border-line p-3 sm:p-4"><video src="${item.dataset.video}" controls class="w-full h-full object-contain bg-black"></video></div>` : '',
   ].join('');
 
   body.innerHTML = `${mediaTabs}${modelMedia}${galleryMedia}${supplementalMedia}`;
 
-  body.insertAdjacentHTML('beforeend', `<div class="portfolio-modal-description border-t border-line p-5 bg-elevated"><p class="portfolio-description text-sm text-ink leading-relaxed"></p><div class="flex flex-wrap gap-2 mt-4">${tags.map((tag) => `<span class="text-xs border border-line rounded px-2 py-1 text-muted">${tag}</span>`).join('')}</div></div>`);
+  body.insertAdjacentHTML('beforeend', `<div class="portfolio-modal-content border-t border-line p-4 sm:p-5 bg-elevated"><p class="portfolio-description text-sm text-ink leading-relaxed"></p>${metadata.length ? `<div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">${metadata.map(([label, value]) => `<div class="rounded-lg border border-line bg-black/20 p-2.5"><p class="text-[10px] font-mono uppercase tracking-widest text-muted">${label}</p><p class="mt-1 text-xs text-ink">${value}</p></div>`).join('')}</div>` : ''}<div class="flex flex-wrap items-center gap-2 mt-4">${tags.map((tag) => `<span class="text-xs border border-line rounded px-2 py-1 text-muted">${tag}</span>`).join('')}${allowDownload && (modelUrl || documentUrl) ? `<a href="${modelUrl || documentUrl}" target="_blank" rel="noopener noreferrer" download class="ml-auto inline-flex items-center rounded-lg bg-accent-bright px-3 py-2 text-xs font-medium text-void hover:bg-white">Download CAD / Spec File</a>` : ''}</div></div>`);
   const descriptionElement = body.querySelector('.portfolio-description');
   if (descriptionElement) descriptionElement.textContent = description || 'No description provided.';
 
@@ -327,6 +339,11 @@ function groupPortfolioItems(items) {
     if (!existing.video_url && item.video_url) existing.video_url = item.video_url;
     if (!existing.document_url && item.document_url) existing.document_url = item.document_url;
     if (item.description && !existing.description) existing.description = item.description;
+    if (!existing.material && item.material) existing.material = item.material;
+    if (!existing.software && item.software) existing.software = item.software;
+    if (!existing.manufacturing_method && item.manufacturing_method) existing.manufacturing_method = item.manufacturing_method;
+    if (!existing.file_type && item.file_type) existing.file_type = item.file_type;
+    existing.allow_download = existing.allow_download || item.allow_download === true;
     if (item.tags?.length) existing.tags = [...new Set([...(existing.tags || []), ...item.tags])];
   });
   return [...groups.values()];

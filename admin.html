@@ -187,6 +187,18 @@
           <input id="item-video-url" placeholder="https://…" class="w-full bg-elevated border border-line rounded-md px-4 py-2.5 text-sm focus:border-accent-bright outline-none text-ink" />
         </div>
 
+        <div class="grid grid-cols-2 gap-3">
+          <input id="item-material" placeholder="Material" class="admin-input" />
+          <input id="item-software" placeholder="Software used" class="admin-input" />
+          <input id="item-manufacturing" placeholder="Manufacturing method" class="admin-input" />
+          <input id="item-file-type" placeholder="File type" class="admin-input" />
+        </div>
+
+        <label class="flex items-center gap-3 rounded-md border border-line bg-elevated px-3 py-3 text-sm text-ink cursor-pointer">
+          <input id="item-allow-download" type="checkbox" class="h-4 w-4 accent-sky-400" />
+          <span><strong class="block font-medium">Enable Public File Downloads</strong><small class="text-xs text-muted">Allow visitors to download the CAD or specification file.</small></span>
+        </label>
+
         <div>
           <label for="item-description" class="block text-xs font-mono text-muted mb-2">Description</label>
           <textarea id="item-description" rows="4" class="w-full bg-elevated border border-line rounded-md px-4 py-2.5 text-sm focus:border-accent-bright outline-none resize-none text-ink"></textarea>

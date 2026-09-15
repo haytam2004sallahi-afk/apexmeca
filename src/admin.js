@@ -41,6 +41,11 @@ const itemImageUrl = $('item-image-url');
 const itemDocumentUrl = $('item-document-url');
 const itemModelUrl = $('item-model-url');
 const itemVideoUrl = $('item-video-url');
+const itemMaterial = $('item-material');
+const itemSoftware = $('item-software');
+const itemManufacturing = $('item-manufacturing');
+const itemFileType = $('item-file-type');
+const itemAllowDownload = $('item-allow-download');
 const itemDescription = $('item-description');
 const itemSubmitBtn = $('item-submit-btn');
 const itemCancelBtn = $('item-cancel-btn');
@@ -102,6 +107,11 @@ async function savePortfolioItem() {
     video_url: itemVideoUrl.value.trim(),
     model_url: itemModelUrl.value.trim(),
     document_url: itemDocumentUrl.value.trim() || null,
+    material: itemMaterial.value.trim() || null,
+    software: itemSoftware.value.trim() || null,
+    manufacturing_method: itemManufacturing.value.trim() || null,
+    file_type: itemFileType.value.trim() || null,
+    allow_download: itemAllowDownload.checked,
     description: itemDescription.value.trim(),
   };
   if (!base.title) throw new Error('A title is required.');
@@ -229,6 +239,11 @@ async function editPortfolioItem(id) {
   itemDocumentUrl.value = data.document_url || '';
   itemModelUrl.value = data.model_url || '';
   itemVideoUrl.value = data.video_url || '';
+  itemMaterial.value = data.material || '';
+  itemSoftware.value = data.software || '';
+  itemManufacturing.value = data.manufacturing_method || '';
+  itemFileType.value = data.file_type || '';
+  itemAllowDownload.checked = data.allow_download === true;
   itemDescription.value = data.description || '';
   itemSubmitBtn.textContent = 'Update item';
   itemCancelBtn?.classList.remove('hidden');
