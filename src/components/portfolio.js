@@ -91,10 +91,54 @@ function cardTemplate(item, translations) {
   `;
 }
 
+/* ---------------------------------------------------------------------- */
+/* Modal                                                                   */
+/* ---------------------------------------------------------------------- */
+
+function isMobileViewport() {
+  return window.matchMedia('(max-width: 767px)').matches;
+}
+
+function metadataChip(label, value) {
+  return `<div class="rounded-lg border border-slate-700 bg-slate-800/60 p-3">
+    <p class="text-[10px] font-mono uppercase tracking-widest text-slate-400">${label}</p>
+    <p class="mt-1 text-sm text-slate-100">${value}</p>
+  </div>`;
+}
+
+function buildPdfPanel({ documentUrl, title, allowDownload }) {
+  if (!documentUrl) return '';
+  // On mobile, iframes for PDFs are unreliable (they hang, show blank, or trigger
+  // a forced download). Skip the iframe entirely there and show the open/download card.
+  const mobile = isMobileViewport();
+  const iframe = mobile
+    ? ''
+    : `<iframe src="${documentUrl}" title="${title} PDF preview" class="absolute inset-0 h-full w-full bg-white" loading="lazy"></iframe>`;
+  return `<div data-media-panel="pdf" class="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-slate-950 p-6 text-center">
+    ${iframe}
+    <div class="relative z-10 flex flex-col items-center gap-4 ${mobile ? '' : 'bg-slate-950/80 rounded-xl px-6 py-6 backdrop-blur-sm'}">
+      <span class="rounded-full border border-sky-400/50 px-3 py-1 font-mono text-xs tracking-widest text-sky-300">PDF DOCUMENT</span>
+      <p class="text-sm text-slate-300 max-w-xs">${title}</p>
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <a href="${documentUrl}" target="_blank" rel="noopener noreferrer" class="rounded-lg bg-sky-400 px-4 py-2.5 text-sm font-medium text-slate-950 hover:bg-sky-300 transition-colors">Open PDF Document (Full Screen)</a>
+        ${allowDownload ? `<a href="${documentUrl}" download target="_blank" rel="noopener noreferrer" class="rounded-lg border border-sky-400/60 px-4 py-2.5 text-sm font-medium text-sky-300 hover:bg-sky-400/10 transition-colors">Download PDF</a>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
 function openModal(item) {
   const modal = document.getElementById('portfolio-modal');
   const body = document.getElementById('portfolio-modal-body');
   if (!modal || !body) return;
+
+  // Resize the dialog wrapper (body's direct parent) into the two-zone premium layout.
+  // This is applied at runtime so it doesn't depend on markup baked into index.html.
+  const dialog = body.parentElement;
+  if (dialog) {
+    dialog.className = 'max-w-6xl w-[94vw] min-h-[85vh] max-h-[90vh] flex flex-col bg-slate-900 text-white rounded-2xl overflow-hidden shadow-2xl';
+  }
+  body.className = 'flex-1 min-h-0 flex flex-col';
 
   const isVideo = item.dataset.isVideo === 'true' && item.dataset.video;
   const title = item.querySelector('h3')?.textContent ?? '';
@@ -115,6 +159,7 @@ function openModal(item) {
       description = parsedDescription.description || parsedDescription.details || parsedDescription.overview || '';
     }
   } catch {
+    // description was plain text, keep as-is
   }
   const tags = item.dataset.tags ? item.dataset.tags.split('|').filter(Boolean) : [];
   const metadata = [
@@ -135,26 +180,69 @@ function openModal(item) {
   activeLightboxIndex = 0;
 
   const hasGallery = galleryUrls.length > 0;
-  const mediaTabs = modelUrl && hasGallery
-    ? `<div class="flex gap-2 p-3 border-b border-line"><button type="button" data-media-tab="model" class="media-tab border border-accent-bright text-accent-bright rounded px-3 py-1.5 text-xs">3D Viewer</button><button type="button" data-media-tab="gallery" class="media-tab border border-line text-muted rounded px-3 py-1.5 text-xs">Image Gallery (${galleryUrls.length})</button></div>`
+  const hasTabs = Boolean(modelUrl) && hasGallery;
+
+  /* ---- Media Stage panels (each is absolute-positioned inside a bounded box) ---- */
+
+  const mediaTabs = hasTabs
+    ? `<div class="absolute top-3 left-3 z-20 flex gap-2 rounded-full bg-slate-950/70 p-1 backdrop-blur-sm">
+         <button type="button" data-media-tab="model" class="media-tab rounded-full bg-sky-400 text-slate-950 px-3 py-1.5 text-xs font-medium">3D Viewer</button>
+         <button type="button" data-media-tab="gallery" class="media-tab rounded-full text-slate-300 px-3 py-1.5 text-xs font-medium">Gallery (${galleryUrls.length})</button>
+       </div>`
     : '';
-  const modelMedia = modelUrl
+
+  const modelPanel = modelUrl
     ? isExternalEmbedUrl(modelUrl)
-      ? `<div data-media-panel="model" class="portfolio-media-stage aspect-[4/3] md:aspect-video w-full bg-black p-2 sm:p-4"><iframe src="${modelUrl}" title="${title} 3D viewer" class="w-full h-full rounded-md" loading="lazy" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe></div>`
-      : `<div data-media-panel="model" class="portfolio-media-stage model-modal-preview aspect-[4/3] md:aspect-video w-full" data-model-url="${modelUrl}"></div>`
+      ? `<div data-media-panel="model" class="absolute inset-0"><iframe src="${modelUrl}" title="${title} 3D viewer" class="w-full h-full" loading="lazy" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe></div>`
+      : `<div data-media-panel="model" class="model-modal-preview absolute inset-0" data-model-url="${modelUrl}"></div>`
     : '';
-  const galleryMedia = hasGallery
-    ? `<div data-media-panel="gallery" class="${modelUrl ? 'hidden' : ''} portfolio-media-stage w-full p-3 sm:p-4"><div data-gallery-stage class="portfolio-gallery-stage relative aspect-[4/3] md:aspect-video bg-black rounded-md overflow-hidden"><img data-gallery-main src="${galleryUrls[0]}" alt="${title}" class="w-full h-full object-contain" /><button type="button" data-gallery-prev aria-label="Previous image" class="gallery-control gallery-control--prev">‹</button><button type="button" data-gallery-next aria-label="Next image" class="gallery-control gallery-control--next">›</button></div><div class="grid grid-flow-col auto-cols-[4.5rem] sm:auto-cols-[5.5rem] gap-2 overflow-x-auto mt-3 pb-1">${galleryUrls.map((url, index) => `<button type="button" data-gallery-thumb="${index}" class="shrink-0 aspect-[4/3] rounded border ${index === 0 ? 'border-accent-bright' : 'border-line'} overflow-hidden transition hover:border-accent-bright/70"><img src="${url}" alt="Preview ${index + 1}" class="w-full h-full object-cover" /></button>`).join('')}</div></div>`
+
+  const galleryPanel = hasGallery
+    ? `<div data-media-panel="gallery" class="${modelUrl ? 'hidden' : ''} absolute inset-0" data-gallery-stage>
+         <img data-gallery-main src="${galleryUrls[0]}" alt="${title}" class="w-full h-full object-contain" />
+         <button type="button" data-gallery-prev aria-label="Previous image" class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/60 hover:bg-slate-950/85 text-white flex items-center justify-center backdrop-blur-sm transition-colors">‹</button>
+         <button type="button" data-gallery-next aria-label="Next image" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/60 hover:bg-slate-950/85 text-white flex items-center justify-center backdrop-blur-sm transition-colors">›</button>
+       </div>`
     : '';
-  const supplementalMedia = [
-    youtubeUrl ? `<div class="portfolio-media-stage aspect-[4/3] md:aspect-video w-full border-t border-line p-3 sm:p-4"><iframe src="${youtubeUrl}" title="${title}" class="w-full h-full rounded-md bg-black" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>` : '',
-    documentUrl ? `<div class="portfolio-media-stage w-full border-t border-line p-3 sm:p-4"><div class="pdf-preview-card relative aspect-[4/3] md:aspect-video overflow-hidden rounded-lg border border-line bg-slate-900"><iframe src="${documentUrl}" title="${title} PDF preview" class="absolute inset-0 h-full w-full bg-white" loading="lazy"></iframe><div class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/75 p-5 text-center md:hidden"><span class="rounded border border-sky-300/50 px-3 py-1 font-mono text-xs tracking-widest text-sky-200">PDF DOCUMENT</span><p class="text-sm font-medium text-white">Open the document in your browser for the best mobile view.</p><a href="${documentUrl}" target="_blank" rel="noopener noreferrer" class="rounded-lg bg-sky-300 px-4 py-2.5 text-sm font-medium text-slate-950">Open PDF Document (Full Screen)</a></div></div><div class="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-elevated p-3"><div><p class="text-xs font-mono uppercase tracking-widest text-accent-bright">PDF document</p><p class="text-sm text-ink">Preview blocked? Open the source document.</p></div><div class="flex flex-wrap gap-2"><a href="${documentUrl}" target="_blank" rel="noopener noreferrer" class="rounded border border-accent-bright px-3 py-2 text-xs text-accent-bright hover:bg-accent/10">View PDF Document</a>${allowDownload ? `<a href="${documentUrl}" download target="_blank" rel="noopener noreferrer" class="rounded bg-accent-bright px-3 py-2 text-xs font-medium text-void hover:bg-white">Download PDF</a>` : ''}</div></div></div>` : '',
-    isVideo && !youtubeUrl ? `<div class="portfolio-media-stage aspect-[4/3] md:aspect-video w-full border-t border-line p-3 sm:p-4"><video src="${item.dataset.video}" controls class="w-full h-full object-contain bg-black"></video></div>` : '',
-  ].join('');
 
-  body.innerHTML = `${mediaTabs}${modelMedia}${galleryMedia}${supplementalMedia}`;
+  const pdfPanel = buildPdfPanel({ documentUrl, title, allowDownload });
 
-  body.insertAdjacentHTML('beforeend', `<div class="portfolio-modal-content border-t border-line p-5 sm:p-7 bg-elevated"><p class="portfolio-description text-base text-slate-100 leading-relaxed font-medium"></p>${metadata.length ? `<div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-5">${metadata.map(([label, value]) => `<div class="rounded-lg border border-line bg-black/20 p-2.5"><p class="text-[10px] font-mono uppercase tracking-widest text-muted">${label}</p><p class="mt-1 text-xs text-ink">${value}</p></div>`).join('')}</div>` : ''}<div class="flex flex-wrap items-center gap-2 mt-5">${tags.map((tag) => `<span class="text-xs border border-line rounded px-2 py-1 text-muted">${tag}</span>`).join('')}${allowDownload && (modelUrl || documentUrl) ? `<a href="${modelUrl || documentUrl}" target="_blank" rel="noopener noreferrer" download class="ml-auto inline-flex items-center rounded-lg bg-accent-bright px-3 py-2 text-xs font-medium text-void hover:bg-white">Download CAD / Spec File</a>` : ''}</div></div>`);
+  const youtubePanel = youtubeUrl
+    ? `<div data-media-panel="video" class="absolute inset-0"><iframe src="${youtubeUrl}" title="${title}" class="w-full h-full bg-black" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`
+    : '';
+
+  const rawVideoPanel = isVideo && !youtubeUrl
+    ? `<div data-media-panel="video" class="absolute inset-0"><video src="${item.dataset.video}" controls class="w-full h-full object-contain bg-black"></video></div>`
+    : '';
+
+  const mediaStageContent = [mediaTabs, modelPanel, galleryPanel, pdfPanel, youtubePanel, rawVideoPanel].join('')
+    || `<div class="absolute inset-0 flex items-center justify-center text-slate-500 text-sm">No preview available</div>`;
+
+  /* ---- Thumbnail bar (only for galleries, sits directly under the stage) ---- */
+
+  const thumbnailBar = hasGallery
+    ? `<div class="flex-shrink-0 bg-slate-950 border-t border-slate-800 px-3 py-2.5">
+         <div class="grid grid-flow-col auto-cols-[4.5rem] sm:auto-cols-[5.5rem] gap-2 overflow-x-auto">
+           ${galleryUrls.map((url, index) => `<button type="button" data-gallery-thumb="${index}" class="shrink-0 aspect-[4/3] rounded-md overflow-hidden border-2 ${index === 0 ? 'border-sky-400' : 'border-transparent'} hover:border-sky-400/60 transition-colors"><img src="${url}" alt="Preview ${index + 1}" class="w-full h-full object-cover" /></button>`).join('')}
+         </div>
+       </div>`
+    : '';
+
+  /* ---- Media Stage wrapper (fixed height) ---- */
+
+  const mediaStage = `<div class="h-[45vh] md:h-[50vh] w-full bg-slate-950 flex-shrink-0 relative overflow-hidden">${mediaStageContent}</div>${thumbnailBar}`;
+
+  /* ---- Content Stage (scrollable) ---- */
+
+  const contentStage = `<div class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-900">
+    <p class="portfolio-description text-slate-200 text-base leading-relaxed"></p>
+    ${metadata.length ? `<div class="grid grid-cols-2 md:grid-cols-4 gap-3">${metadata.map(([label, value]) => metadataChip(label, value)).join('')}</div>` : ''}
+    ${tags.length ? `<div class="flex flex-wrap gap-2">${tags.map((tag) => `<span class="text-xs border border-slate-700 rounded-full px-3 py-1 text-slate-400">${tag}</span>`).join('')}</div>` : ''}
+    ${allowDownload && (modelUrl || documentUrl) ? `<div class="pt-2"><a href="${modelUrl || documentUrl}" target="_blank" rel="noopener noreferrer" download class="inline-flex items-center rounded-lg bg-sky-400 px-4 py-2.5 text-sm font-medium text-slate-950 hover:bg-sky-300 transition-colors">Download File / Specification</a></div>` : ''}
+  </div>`;
+
+  body.innerHTML = mediaStage + contentStage;
+
   const descriptionElement = body.querySelector('.portfolio-description');
   if (descriptionElement) descriptionElement.textContent = description || 'No description provided.';
 
@@ -162,26 +250,33 @@ function openModal(item) {
   const modalCat = document.getElementById('portfolio-modal-category');
   if (modalTitle) modalTitle.textContent = title;
   if (modalCat) modalCat.textContent = category;
+
   body.querySelector('[data-model-url]') && mountModelPreview(body.querySelector('[data-model-url]'));
 
   body.querySelectorAll('[data-media-tab]').forEach((tab) => tab.addEventListener('click', () => {
-    body.querySelectorAll('[data-media-tab]').forEach((button) => button.className = 'media-tab border border-line text-muted rounded px-3 py-1.5 text-xs');
-    tab.className = 'media-tab border border-accent-bright text-accent-bright rounded px-3 py-1.5 text-xs';
+    body.querySelectorAll('[data-media-tab]').forEach((button) => {
+      button.classList.remove('bg-sky-400', 'text-slate-950');
+      button.classList.add('text-slate-300');
+    });
+    tab.classList.add('bg-sky-400', 'text-slate-950');
+    tab.classList.remove('text-slate-300');
     body.querySelectorAll('[data-media-panel]').forEach((panel) => panel.classList.toggle('hidden', panel.dataset.mediaPanel !== tab.dataset.mediaTab));
   }));
+
   const updateGallery = (index) => {
     activeLightboxIndex = (index + galleryUrls.length) % galleryUrls.length;
     const main = body.querySelector('[data-gallery-main]');
     if (main && galleryUrls[activeLightboxIndex]) main.src = galleryUrls[activeLightboxIndex];
     body.querySelectorAll('[data-gallery-thumb]').forEach((button) => {
       const selected = Number(button.dataset.galleryThumb) === activeLightboxIndex;
-      button.classList.toggle('border-accent-bright', selected);
-      button.classList.toggle('border-line', !selected);
+      button.classList.toggle('border-sky-400', selected);
+      button.classList.toggle('border-transparent', !selected);
     });
   };
   body.querySelectorAll('[data-gallery-thumb]').forEach((thumb) => thumb.addEventListener('click', () => updateGallery(Number(thumb.dataset.galleryThumb))));
   body.querySelector('[data-gallery-prev]')?.addEventListener('click', () => updateGallery(activeLightboxIndex - 1));
   body.querySelector('[data-gallery-next]')?.addEventListener('click', () => updateGallery(activeLightboxIndex + 1));
+
   let galleryTouchStartX = 0;
   body.querySelector('[data-gallery-stage]')?.addEventListener('touchstart', (event) => { galleryTouchStartX = event.changedTouches[0]?.screenX || 0; }, { passive: true });
   body.querySelector('[data-gallery-stage]')?.addEventListener('touchend', (event) => {
