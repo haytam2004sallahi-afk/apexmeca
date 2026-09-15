@@ -222,6 +222,9 @@ h1, h2, h3, h4 {
 .portfolio-modal-body { min-height: 0; }
 .portfolio-media-stage { flex: 0 1 auto; max-height: 60vh; }
 .portfolio-modal-content { flex: 0 1 auto; }
+.portfolio-description { color: rgb(241 245 249); }
+
+:root[data-theme='light'] .portfolio-description { color: rgb(15 23 42); }
 
 .gallery-control {
   position: absolute;
@@ -280,7 +283,7 @@ h1, h2, h3, h4 {
 }
 
 @media (max-width: 640px) {
-  .portfolio-modal-panel { max-height: 90vh; }
+  .portfolio-modal-panel { min-height: 70vh; max-height: 90vh; }
   .portfolio-media-stage { max-height: 50vh; }
   .lightbox-control { width: 2.5rem; height: 2.5rem; }
   .lightbox-control--prev { left: 0.5rem; }

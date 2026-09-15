@@ -50,6 +50,8 @@ const itemDescription = $('item-description');
 const itemSubmitBtn = $('item-submit-btn');
 const itemCancelBtn = $('item-cancel-btn');
 const itemStatus = $('item-status');
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+const FILE_SIZE_ERROR = 'File size exceeds the limit. Please use external links (YouTube/Drive/3D Embeds) or compress the file.';
 
 function setStatus(element, text, kind = 'info') {
   if (!element) return;
@@ -101,6 +103,7 @@ function mediaType(file) {
 
 async function savePortfolioItem() {
   const files = [...(itemMediaFiles?.files || [])];
+  if (files.some((file) => file.size > MAX_UPLOAD_BYTES)) throw new Error(FILE_SIZE_ERROR);
   const base = {
     title: itemTitle.value.trim(),
     category: itemCategory.value,
@@ -119,7 +122,12 @@ async function savePortfolioItem() {
   const uploaded = [];
   const uploadFolder = crypto.randomUUID();
   for (const file of files) {
-    uploaded.push({ url: await uploadFile(file, uploadFolder), type: mediaType(file), name: file.name });
+    try {
+      uploaded.push({ url: await uploadFile(file, uploadFolder), type: mediaType(file), name: file.name });
+    } catch (error) {
+      const message = /size|large|payload|limit/i.test(error?.message || '') ? FILE_SIZE_ERROR : error.message;
+      throw new Error(message);
+    }
   }
   const displayFiles = uploaded.filter((file) => file.type !== 'asset');
   if (!displayFiles.length && !itemImageUrl.value.trim() && !itemModelUrl.value.trim() && !itemDocumentUrl.value.trim() && !itemVideoUrl.value.trim()) {
