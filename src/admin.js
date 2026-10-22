@@ -27,6 +27,12 @@ function formatTags(tags) {
   return normalizeTags(tags).join(' · ');
 }
 
+const HTML_ENTITIES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => HTML_ENTITIES[character]);
+}
+
 const loginView = $('login-view');
 const dashboardView = $('dashboard-view');
 const loginForm = $('login-form');
@@ -36,11 +42,18 @@ const itemForm = $('item-form');
 const itemId = $('item-id');
 const itemTitle = $('item-title');
 const itemCategory = $('item-category');
-const itemMediaFiles = $('item-media-files');
-const itemImageUrl = $('item-image-url');
+const itemPrimaryImageFile = $('item-primary-image-file');
+const itemGalleryFiles = $('item-gallery-files');
+const itemModelFile = $('item-model-file');
+const itemImageUrl = $('item-primary-image-url');
+const itemGalleryUrls = $('item-gallery-urls');
 const itemDocumentUrl = $('item-document-url');
-const itemModelUrl = $('item-model-url');
+const itemModelUrl = $('item-model-3d-url');
 const itemVideoUrl = $('item-video-url');
+const itemTags = $('item-tags');
+const itemClient = $('item-client');
+const itemProjectDate = $('item-project-date');
+const itemFeatured = $('item-featured');
 const itemMaterial = $('item-material');
 const itemSoftware = $('item-software');
 const itemManufacturing = $('item-manufacturing');
@@ -102,13 +115,23 @@ function mediaType(file) {
 }
 
 async function savePortfolioItem() {
-  const files = [...(itemMediaFiles?.files || [])];
+  const primaryFile = itemPrimaryImageFile?.files?.[0];
+  const galleryFiles = [...(itemGalleryFiles?.files || [])];
+  const modelFile = itemModelFile?.files?.[0];
+  const files = [primaryFile, ...galleryFiles, modelFile].filter(Boolean);
   if (files.some((file) => file.size > MAX_UPLOAD_BYTES)) throw new Error(FILE_SIZE_ERROR);
+  if (primaryFile && !primaryFile.type.startsWith('image/')) throw new Error('The primary cover must be an image.');
+  if (galleryFiles.some((file) => !file.type.startsWith('image/'))) throw new Error('Gallery files must be images.');
+  if (modelFile && !/\.(stl|glb|gltf|step|stp)$/i.test(modelFile.name)) throw new Error('Use an STL, GLB, GLTF, STEP, or STP model file.');
   const base = {
     title: itemTitle.value.trim(),
     category: itemCategory.value,
     video_url: itemVideoUrl.value.trim(),
     model_url: itemModelUrl.value.trim(),
+    tags: normalizeTags(itemTags.value),
+    client_name: itemClient.value.trim() || null,
+    project_date: itemProjectDate.value || null,
+    is_featured: itemFeatured.checked,
     document_url: itemDocumentUrl.value.trim() || null,
     material: itemMaterial.value.trim() || null,
     software: itemSoftware.value.trim() || null,
@@ -118,34 +141,31 @@ async function savePortfolioItem() {
     description: itemDescription.value.trim(),
   };
   if (!base.title) throw new Error('A title is required.');
+  if (!primaryFile && !itemImageUrl.value.trim()) throw new Error('Add a primary cover image file or URL.');
 
-  const uploaded = [];
   const uploadFolder = crypto.randomUUID();
-  for (const file of files) {
-    try {
-      uploaded.push({ url: await uploadFile(file, uploadFolder), type: mediaType(file), name: file.name });
-    } catch (error) {
+  const upload = async (file) => {
+    try { return await uploadFile(file, uploadFolder); }
+    catch (error) {
       const message = /size|large|payload|limit/i.test(error?.message || '') ? FILE_SIZE_ERROR : error.message;
       throw new Error(message);
     }
-  }
-  const displayFiles = uploaded.filter((file) => file.type !== 'asset');
-  if (!displayFiles.length && !itemImageUrl.value.trim() && !itemModelUrl.value.trim() && !itemDocumentUrl.value.trim() && !itemVideoUrl.value.trim()) {
-    throw new Error('Add a media file or a PDF, video, model, or cover URL.');
-  }
-  const pastedImageUrl = itemImageUrl.value.trim();
-  const imageUrls = [...displayFiles.filter((file) => file.type === 'image').map((file) => file.url)];
-  if (pastedImageUrl && !imageUrls.includes(pastedImageUrl)) imageUrls.unshift(pastedImageUrl);
-  const firstImage = imageUrls[0] || pastedImageUrl;
-  const model = displayFiles.find((file) => file.type === 'model');
-  const document = displayFiles.find((file) => file.type === 'document');
+  };
+  const primaryImage = primaryFile ? await upload(primaryFile) : itemImageUrl.value.trim();
+  const galleryImages = [...new Set([
+    ...await Promise.all(galleryFiles.map(upload)),
+    ...itemGalleryUrls.value.split(/[\n,]+/).map((url) => url.trim()).filter(Boolean),
+  ])];
+  const model3dUrl = modelFile ? await upload(modelFile) : base.model_url || null;
   const projectData = {
     ...base,
-    image_url: firstImage,
-    image_urls: imageUrls,
-    model_url: model?.url || base.model_url,
-    document_url: document?.url || base.document_url,
-    media_type: model ? 'model' : document ? 'document' : base.category === 'Videos' ? 'video' : 'image',
+    primary_image_url: primaryImage,
+    gallery_images: galleryImages,
+    model_3d_url: model3dUrl,
+    image_url: primaryImage,
+    image_urls: [primaryImage, ...galleryImages],
+    model_url: model3dUrl,
+    media_type: model3dUrl ? 'model' : base.document_url ? 'document' : base.video_url ? 'video' : 'image',
   };
 
   if (itemId.value) {
@@ -187,11 +207,12 @@ async function fetchPortfolioItems() {
   }
   if (list) {
     list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-4 space-y-2 border border-line">
-      ${item.image_url ? `<img src="${item.image_url}" class="w-full h-32 object-cover rounded-md mb-2" alt="" />` : ''}
-      <h3 class="font-display font-medium text-ink">${item.title}</h3>
-      <span class="inline-block px-2 py-0.5 text-xs font-mono bg-elevated border border-line rounded text-muted">${item.category}</span>
-      <p class="text-xs text-muted line-clamp-2">${item.description || ''}</p>
-      <div class="flex gap-2 pt-2"><button data-edit-portfolio="${item.id}" class="text-xs font-mono text-accent-bright hover:underline">Edit</button><button data-delete-portfolio="${item.id}" class="text-xs font-mono text-red-400 hover:underline">Delete</button></div>
+      ${(item.primary_image_url || item.image_url) ? `<img src="${escapeHtml(item.primary_image_url || item.image_url)}" class="w-full h-32 object-cover rounded-md mb-2" alt="" loading="lazy" />` : ''}
+      <h3 class="font-display font-medium text-ink">${escapeHtml(item.title)}</h3>
+      <span class="inline-block px-2 py-0.5 text-xs font-mono bg-elevated border border-line rounded text-muted">${escapeHtml(item.category)}</span>
+      <p class="text-xs text-muted line-clamp-2">${escapeHtml(item.description || '')}</p>
+      <p class="text-xs text-muted">${escapeHtml(formatTags(item.tags))}${item.project_date ? ` · ${escapeHtml(item.project_date)}` : ''}</p>
+      <div class="flex gap-2 pt-2"><button data-edit-portfolio="${escapeHtml(item.id)}" class="text-xs font-mono text-accent-bright hover:underline">Edit</button><button data-delete-portfolio="${escapeHtml(item.id)}" class="text-xs font-mono text-red-400 hover:underline">Delete</button></div>
     </div>`).join('');
     list.querySelectorAll('[data-edit-portfolio]').forEach((button) => button.addEventListener('click', () => editPortfolioItem(button.dataset.editPortfolio)));
     list.querySelectorAll('[data-delete-portfolio]').forEach((button) => button.addEventListener('click', () => deleteRecord(TABLES.portfolio, button.dataset.deletePortfolio, fetchPortfolioItems)));
@@ -209,8 +230,8 @@ async function fetchBlogPosts() {
   }
   if (list) {
     list.innerHTML = (data || []).map((post) => `<article class="glass rounded-lg p-4 border border-line">
-      <div class="flex items-start justify-between gap-3"><div><p class="font-mono text-xs text-accent-bright">${post.published_at || 'Unscheduled'} · /blog/${post.slug}</p><h3 class="font-display text-lg">${post.title}</h3></div><span class="text-xs text-muted">${formatTags(post.tags)}</span></div>
-      <p class="text-sm text-muted mt-2 line-clamp-2">${post.excerpt || ''}</p><div class="flex gap-3 mt-3"><button data-edit-blog="${post.id}" class="text-xs text-accent-bright">Edit</button><button data-delete-blog="${post.id}" class="text-xs text-red-400">Delete</button></div>
+      <div class="flex items-start justify-between gap-3"><div><p class="font-mono text-xs text-accent-bright">${escapeHtml(post.published_at || 'Unscheduled')} · /blog/${escapeHtml(post.slug)}</p><h3 class="font-display text-lg">${escapeHtml(post.title)}</h3></div><span class="text-xs text-muted">${escapeHtml(formatTags(post.tags))}</span></div>
+      <p class="text-sm text-muted mt-2 line-clamp-2">${escapeHtml(post.excerpt || '')}</p><div class="flex gap-3 mt-3"><button data-edit-blog="${escapeHtml(post.id)}" class="text-xs text-accent-bright">Edit</button><button data-delete-blog="${escapeHtml(post.id)}" class="text-xs text-red-400">Delete</button></div>
     </article>`).join('') || '<p class="text-sm text-muted">No articles yet.</p>';
     list.querySelectorAll('[data-edit-blog]').forEach((button) => button.addEventListener('click', () => editBlogPost(button.dataset.editBlog)));
     list.querySelectorAll('[data-delete-blog]').forEach((button) => button.addEventListener('click', () => deleteRecord(TABLES.blog, button.dataset.deleteBlog, fetchBlogPosts)));
@@ -243,10 +264,16 @@ async function editPortfolioItem(id) {
   itemId.value = data.id;
   itemTitle.value = data.title;
   itemCategory.value = data.category;
-  itemImageUrl.value = data.image_url || '';
+  itemImageUrl.value = data.primary_image_url || data.image_url || '';
+  const oldImages = Array.isArray(data.image_urls) ? data.image_urls : [];
+  itemGalleryUrls.value = (data.gallery_images?.length ? data.gallery_images : oldImages.filter((url) => url !== itemImageUrl.value)).join('\n');
   itemDocumentUrl.value = data.document_url || '';
-  itemModelUrl.value = data.model_url || '';
+  itemModelUrl.value = data.model_3d_url || data.model_url || '';
   itemVideoUrl.value = data.video_url || '';
+  itemTags.value = normalizeTags(data.tags).join(', ');
+  itemClient.value = data.client_name || '';
+  itemProjectDate.value = data.project_date || '';
+  itemFeatured.checked = data.is_featured === true;
   itemMaterial.value = data.material || '';
   itemSoftware.value = data.software || '';
   itemManufacturing.value = data.manufacturing_method || '';
@@ -312,7 +339,7 @@ async function fetchExperience() {
     if (list) list.innerHTML = `<p class="text-red-500">${error.message}</p>`;
     return;
   }
-  list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-4 border border-line"><p class="font-mono text-xs text-accent-bright">${item.year}</p><h3 class="font-display">${item.title}</h3><p class="text-sm text-muted">${item.description || ''}</p><div class="flex gap-3 mt-2"><button data-edit-experience="${item.id}" class="text-xs text-accent-bright">Edit</button><button data-delete-experience="${item.id}" class="text-xs text-red-400">Delete</button></div></div>`).join('');
+  list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-4 border border-line"><p class="font-mono text-xs text-accent-bright">${escapeHtml(item.year)}</p><h3 class="font-display">${escapeHtml(item.title)}</h3><p class="text-sm text-muted">${escapeHtml(item.description || '')}</p><div class="flex gap-3 mt-2"><button data-edit-experience="${escapeHtml(item.id)}" class="text-xs text-accent-bright">Edit</button><button data-delete-experience="${escapeHtml(item.id)}" class="text-xs text-red-400">Delete</button></div></div>`).join('');
   list.querySelectorAll('[data-delete-experience]').forEach((button) => button.addEventListener('click', () => deleteRecord(TABLES.experience, button.dataset.deleteExperience, fetchExperience)));
   list.querySelectorAll('[data-edit-experience]').forEach((button) => button.addEventListener('click', async () => {
     const { data: item } = await supabase.from(TABLES.experience).select('*').eq('id', button.dataset.editExperience).single();
@@ -333,7 +360,7 @@ async function fetchSkills() {
     if (list) list.innerHTML = `<p class="text-red-500">${error.message}</p>`;
     return;
   }
-  list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-3 border border-line"><p class="font-display">${item.name}</p><p class="text-xs text-muted">${item.category}</p><div class="flex gap-3 mt-2"><button data-edit-skill="${item.id}" class="text-xs text-accent-bright">Edit</button><button data-delete-skill="${item.id}" class="text-xs text-red-400">Delete</button></div></div>`).join('');
+  list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-3 border border-line"><p class="font-display">${escapeHtml(item.name)}</p><p class="text-xs text-muted">${escapeHtml(item.category)}</p><div class="flex gap-3 mt-2"><button data-edit-skill="${escapeHtml(item.id)}" class="text-xs text-accent-bright">Edit</button><button data-delete-skill="${escapeHtml(item.id)}" class="text-xs text-red-400">Delete</button></div></div>`).join('');
   list.querySelectorAll('[data-delete-skill]').forEach((button) => button.addEventListener('click', () => deleteRecord(TABLES.skills, button.dataset.deleteSkill, fetchSkills)));
   list.querySelectorAll('[data-edit-skill]').forEach((button) => button.addEventListener('click', async () => {
     const { data: item } = await supabase.from(TABLES.skills).select('*').eq('id', button.dataset.editSkill).single();
@@ -385,7 +412,7 @@ function bindManagedForm({ form, id, table, fields, list, status, cancel }) {
 async function fetchServices() {
   const { data, error } = await supabase.from('services').select('*').order('sort_order'); const list = $('admin-services-list');
   if (error) { if (list) list.innerHTML = `<p class="text-red-500">${error.message}</p>`; return; }
-  list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-4 border border-line"><p class="font-mono text-xs text-accent-bright">${item.code} · ${item.status}</p><h3 class="font-display">${item.title}</h3><p class="text-sm text-muted">${item.description || ''}</p><div class="flex gap-3 mt-2"><button data-edit-service="${item.id}" class="text-xs text-accent-bright">Edit</button><button data-delete-service="${item.id}" class="text-xs text-red-400">Delete</button></div></div>`).join('');
+  list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-4 border border-line"><p class="font-mono text-xs text-accent-bright">${escapeHtml(item.code)} · ${escapeHtml(item.status)}</p><h3 class="font-display">${escapeHtml(item.title)}</h3><p class="text-sm text-muted">${escapeHtml(item.description || '')}</p><div class="flex gap-3 mt-2"><button data-edit-service="${escapeHtml(item.id)}" class="text-xs text-accent-bright">Edit</button><button data-delete-service="${escapeHtml(item.id)}" class="text-xs text-red-400">Delete</button></div></div>`).join('');
   list.querySelectorAll('[data-delete-service]').forEach((button) => button.addEventListener('click', () => deleteRecord('services', button.dataset.deleteService, fetchServices)));
   list.querySelectorAll('[data-edit-service]').forEach((button) => button.addEventListener('click', async () => { const { data: item } = await supabase.from('services').select('*').eq('id', button.dataset.editService).single(); if (!item) return; $('service-id').value = item.id; $('service-code').value = item.code; $('service-title').value = item.title; $('service-description').value = item.description || ''; $('service-tags').value = (item.tags || []).join(', '); $('service-status').value = item.status; $('service-order').value = item.sort_order; $('service-cancel').classList.remove('hidden'); }));
   $('overview-services').textContent = (data || []).filter((item) => item.status === 'active').length;
@@ -394,7 +421,7 @@ async function fetchServices() {
 async function fetchSoftware() {
   const { data, error } = await supabase.from('software').select('*').order('sort_order'); const list = $('admin-software-list');
   if (error) { if (list) list.innerHTML = `<p class="text-red-500">${error.message}</p>`; return; }
-  list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-4 border border-line flex items-center gap-3">${item.logo_url ? `<img src="${item.logo_url}" class="w-10 h-10 object-contain" alt="" />` : ''}<div class="flex-1"><h3 class="font-display">${item.name}</h3><p class="text-xs text-muted">${item.status}</p></div><button data-edit-software="${item.id}" class="text-xs text-accent-bright">Edit</button><button data-delete-software="${item.id}" class="text-xs text-red-400">Delete</button></div>`).join('');
+  list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-4 border border-line flex items-center gap-3">${item.logo_url ? `<img src="${escapeHtml(item.logo_url)}" class="w-10 h-10 object-contain" alt="" />` : ''}<div class="flex-1"><h3 class="font-display">${escapeHtml(item.name)}</h3><p class="text-xs text-muted">${escapeHtml(item.status)}</p></div><button data-edit-software="${escapeHtml(item.id)}" class="text-xs text-accent-bright">Edit</button><button data-delete-software="${escapeHtml(item.id)}" class="text-xs text-red-400">Delete</button></div>`).join('');
   list.querySelectorAll('[data-delete-software]').forEach((button) => button.addEventListener('click', () => deleteRecord('software', button.dataset.deleteSoftware, fetchSoftware)));
   list.querySelectorAll('[data-edit-software]').forEach((button) => button.addEventListener('click', async () => { const { data: item } = await supabase.from('software').select('*').eq('id', button.dataset.editSoftware).single(); if (!item) return; $('software-id').value = item.id; $('software-name').value = item.name; $('software-logo').value = item.logo_url || ''; $('software-status').value = item.status; $('software-order').value = item.sort_order; $('software-cancel').classList.remove('hidden'); }));
   $('overview-software').textContent = data?.length || 0;
@@ -403,7 +430,7 @@ async function fetchSoftware() {
 async function fetchSocialLinks() {
   const { data, error } = await supabase.from('social_links').select('*').order('sort_order'); const list = $('admin-social-list');
   if (error) { if (list) list.innerHTML = `<p class="text-red-500">${error.message}</p>`; return; }
-  list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-4 border border-line"><p class="font-mono text-xs text-accent-bright">${item.label}</p><p class="text-sm text-muted break-all">${item.url || ''}</p><p class="text-xs text-muted">${item.subtext || ''}</p><div class="flex gap-3 mt-2"><button data-edit-social="${item.id}" class="text-xs text-accent-bright">Edit</button><button data-delete-social="${item.id}" class="text-xs text-red-400">Delete</button></div></div>`).join('');
+  list.innerHTML = (data || []).map((item) => `<div class="glass rounded-lg p-4 border border-line"><p class="font-mono text-xs text-accent-bright">${escapeHtml(item.label)}</p><p class="text-sm text-muted break-all">${escapeHtml(item.url || '')}</p><p class="text-xs text-muted">${escapeHtml(item.subtext || '')}</p><div class="flex gap-3 mt-2"><button data-edit-social="${escapeHtml(item.id)}" class="text-xs text-accent-bright">Edit</button><button data-delete-social="${escapeHtml(item.id)}" class="text-xs text-red-400">Delete</button></div></div>`).join('');
   list.querySelectorAll('[data-delete-social]').forEach((button) => button.addEventListener('click', () => deleteRecord('social_links', button.dataset.deleteSocial, fetchSocialLinks)));
   list.querySelectorAll('[data-edit-social]').forEach((button) => button.addEventListener('click', async () => { const { data: item } = await supabase.from('social_links').select('*').eq('id', button.dataset.editSocial).single(); if (!item) return; $('social-id').value = item.id; $('social-slug').value = item.slug; $('social-label').value = item.label; $('social-url').value = item.url || ''; $('social-subtext').value = item.subtext || ''; $('social-order').value = item.sort_order; $('social-cancel').classList.remove('hidden'); }));
 }
@@ -421,7 +448,7 @@ async function fetchAnalytics() {
   $('analytics-contacts-bar').style.width = `${Math.min(100, countEvent(events, 'contact_submit') / total * 100)}%`;
   const { data: messages } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
   const messagesList = $('admin-messages-list');
-  if (messagesList) messagesList.innerHTML = (messages || []).map((message) => `<article class="border-b border-line pb-3"><div class="flex justify-between gap-3"><strong class="text-sm">${message.name}</strong><time class="text-xs text-muted">${new Date(message.created_at).toLocaleDateString()}</time></div><p class="text-xs text-muted mt-1">${message.email}</p><p class="text-sm mt-2">${message.message}</p></article>`).join('') || '<p class="text-sm text-muted">No messages yet.</p>';
+  if (messagesList) messagesList.innerHTML = (messages || []).map((message) => `<article class="border-b border-line pb-3"><div class="flex justify-between gap-3"><strong class="text-sm">${escapeHtml(message.name)}</strong><time class="text-xs text-muted">${escapeHtml(new Date(message.created_at).toLocaleDateString())}</time></div><p class="text-xs text-muted mt-1">${escapeHtml(message.email)}</p><p class="text-sm mt-2">${escapeHtml(message.message)}</p></article>`).join('') || '<p class="text-sm text-muted">No messages yet.</p>';
 }
 
 function countEvent(events, type) { return events.filter((event) => event.event_type === type).length; }
@@ -440,8 +467,18 @@ function initAdminTheme() {
 
 function initSidebarToggle() {
   const toggle = $('admin-sidebar-toggle');
-  toggle?.setAttribute('aria-label', 'Sidebar stays expanded');
-  toggle?.addEventListener('click', () => showToast('Sidebar stays expanded to protect workspace layout.', 'info'));
+  const sidebar = document.querySelector('.admin-sidebar');
+  if (!toggle || !sidebar) return;
+
+  const applyCollapsed = (collapsed) => {
+    document.body.classList.toggle('admin-sidebar-collapsed', collapsed);
+    sidebar.classList.toggle('collapsed', collapsed);
+    toggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    toggle.textContent = collapsed ? '›' : '≡';
+  };
+
+  applyCollapsed(false);
+  toggle.addEventListener('click', () => applyCollapsed(!document.body.classList.contains('admin-sidebar-collapsed')));
 }
 
 function initListFilters() {

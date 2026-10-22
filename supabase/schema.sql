@@ -28,6 +28,12 @@ create table if not exists public.portfolio (
 );
 
 alter table public.portfolio add column if not exists model_url text;
+alter table public.portfolio add column if not exists primary_image_url text;
+alter table public.portfolio add column if not exists gallery_images text[] not null default '{}';
+alter table public.portfolio add column if not exists model_3d_url text;
+alter table public.portfolio add column if not exists client_name text;
+alter table public.portfolio add column if not exists project_date date;
+alter table public.portfolio add column if not exists is_featured boolean not null default false;
 alter table public.portfolio add column if not exists document_url text;
 alter table public.portfolio add column if not exists material text;
 alter table public.portfolio add column if not exists software text;
@@ -38,6 +44,18 @@ alter table public.portfolio add column if not exists media_type text not null d
 alter table public.portfolio add column if not exists image_urls jsonb not null default '[]'::jsonb;
 alter table public.portfolio add column if not exists tags text[] not null default '{}';
 alter table public.portfolio add column if not exists sort_order integer not null default 0;
+update public.portfolio
+set primary_image_url = coalesce(primary_image_url, image_url, image_urls ->> 0),
+    model_3d_url = coalesce(model_3d_url, model_url),
+    gallery_images = case
+      when cardinality(gallery_images) > 0 then gallery_images
+      when jsonb_typeof(image_urls) = 'array' then array(
+        select value
+        from jsonb_array_elements_text(image_urls) with ordinality as image(value, position)
+        where position > 1
+      )
+      else '{}'::text[]
+    end;
 alter table public.portfolio drop constraint if exists portfolio_category_check;
 alter table public.portfolio add constraint portfolio_category_check
   check (category in ('3D Models', 'Surfacing', 'Sheet Metal', 'Videos', 'Documents'));

@@ -13,6 +13,34 @@ function getNestedValue(object, path) {
   return path.split('.').reduce((value, key) => value?.[key], object);
 }
 
+const HTML_ENTITIES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => HTML_ENTITIES[character]);
+}
+
+function safeResourceUrl(value) {
+  const url = String(value ?? '').trim();
+  if (!url) return '';
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return ['http:', 'https:'].includes(parsed.protocol) ? url : '';
+  } catch {
+    return '';
+  }
+}
+
+function safeLinkUrl(value) {
+  const url = String(value ?? '').trim();
+  if (!url) return '';
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return ['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol) ? url : '';
+  } catch {
+    return '';
+  }
+}
+
 function renderTranslations(translations, locale) {
   document.documentElement.lang = locale;
   document.querySelectorAll('[data-i18n]').forEach((element) => {
@@ -32,15 +60,15 @@ function renderServices(services, translations) {
     (s) => `
     <div class="glass glow-hover rounded-lg p-6 flex flex-col">
       <div class="flex items-center justify-between mb-4">
-        <span class="font-mono text-xs text-accent-bright/80">${s.code}</span>
+        <span class="font-mono text-xs text-accent-bright/80">${escapeHtml(s.code)}</span>
         <span class="status-pill ${s.status === 'active' ? 'status-pill--active' : 'status-pill--soon'}">
           ${s.status === 'active' ? translations.status.active : translations.status.soon}
         </span>
       </div>
-      <h3 class="font-display text-lg mb-2">${s.title}</h3>
-      <p class="text-muted text-sm leading-relaxed flex-1">${s.description}</p>
+      <h3 class="font-display text-lg mb-2">${escapeHtml(s.title)}</h3>
+      <p class="text-muted text-sm leading-relaxed flex-1">${escapeHtml(s.description)}</p>
       <div class="flex flex-wrap gap-1.5 mt-5">
-        ${s.tags.map((t) => `<span class="text-[11px] text-muted border border-line rounded px-2 py-1">${t}</span>`).join('')}
+        ${(Array.isArray(s.tags) ? s.tags : []).map((tag) => `<span class="text-[11px] text-muted border border-line rounded px-2 py-1">${escapeHtml(tag)}</span>`).join('')}
       </div>
     </div>`
   ).join('');
@@ -53,10 +81,10 @@ function renderSoftware(software, translations) {
     (sw) => `
     <div class="glass glow-hover rounded-lg p-6 flex flex-col items-center text-center gap-4">
       <div class="w-14 h-14 flex items-center justify-center rounded-md bg-elevated border border-line">
-        <img src="${sw.logo}" alt="${sw.name} logo" class="w-8 h-8 object-contain opacity-90" onerror="this.style.display='none'" />
+        <img src="${escapeHtml(safeResourceUrl(sw.logo))}" alt="${escapeHtml(sw.name)} logo" class="w-8 h-8 object-contain opacity-90" onerror="this.style.display='none'" />
       </div>
       <div>
-        <p class="font-display text-sm">${sw.name}</p>
+        <p class="font-display text-sm">${escapeHtml(sw.name)}</p>
         <span class="status-pill ${sw.status === 'active' ? 'status-pill--active' : 'status-pill--soon'} mt-2 inline-block">
           ${sw.status === 'active' ? translations.status.active : translations.status.soon}
         </span>
@@ -72,9 +100,9 @@ function renderExperience(experience) {
     (e) => `
     <div class="relative">
       <span class="absolute -left-[34px] top-1 w-2.5 h-2.5 rounded-full bg-accent-bright"></span>
-      <p class="font-mono text-xs text-accent-bright/80 mb-1">${e.year || e.period || ''}</p>
-      <h3 class="font-display text-base mb-1">${e.title}</h3>
-      <p class="text-muted text-sm leading-relaxed">${e.description}</p>
+      <p class="font-mono text-xs text-accent-bright/80 mb-1">${escapeHtml(e.year || e.period || '')}</p>
+      <h3 class="font-display text-base mb-1">${escapeHtml(e.title)}</h3>
+      <p class="text-muted text-sm leading-relaxed">${escapeHtml(e.description)}</p>
     </div>`
   ).join('');
 }
@@ -97,8 +125,10 @@ async function loadManagedContent(content) {
     })), content.translations);
   }
   socialLinks?.forEach((link) => {
-    const element = document.querySelector(`[data-social="${link.slug}"]`);
-    if (element && link.url) element.href = link.url;
+    const element = [...document.querySelectorAll('[data-social]')].find((candidate) => candidate.dataset.social === link.slug);
+    const url = safeLinkUrl(link.url);
+    if (element && url) element.href = url;
+    else element?.removeAttribute('href');
   });
   const subtext = socialLinks?.find((link) => link.subtext)?.subtext;
   if (subtext) document.getElementById('contact-subtext').textContent = subtext;

@@ -164,6 +164,65 @@ h1, h2, h3, h4 {
   background: rgb(var(--color-ink) / 0.04);
 }
 
+#portfolio > .portfolio-container {
+  width: min(94vw, 1600px);
+  max-width: none;
+  padding-inline: clamp(1rem, 2.5vw, 2.5rem);
+}
+
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  grid-auto-flow: dense;
+  align-items: stretch;
+  gap: clamp(1rem, 1.5vw, 1.5rem);
+}
+
+.portfolio-card {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+}
+
+.portfolio-media {
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  aspect-ratio: 4 / 3;
+  flex: 0 0 auto;
+  overflow: hidden;
+  background-color: rgb(var(--color-elevated));
+}
+
+.portfolio-placeholder {
+  display: flex;
+  min-height: 0 !important;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  background-color: rgb(var(--color-elevated));
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 27px, rgb(var(--color-line) / 0.5) 27px 28px),
+    repeating-linear-gradient(90deg, transparent 0 27px, rgb(var(--color-line) / 0.5) 27px 28px);
+  text-align: center;
+}
+
+@media (min-width: 860px) {
+  .portfolio-card.featured {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+
+  .portfolio-card.featured .portfolio-media {
+    min-height: 420px;
+    aspect-ratio: 16 / 9;
+  }
+}
+
 .nav-link {
   position: relative;
   padding-bottom: 2px;

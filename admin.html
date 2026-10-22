@@ -57,6 +57,10 @@
     .admin-nav-link { transition: background .2s ease, color .2s ease, transform .2s ease; }
     .admin-nav-link:hover { transform: translateX(3px); }
     .admin-nav-link.active { color: #38bdf8; background: rgba(56,189,248,.12); box-shadow: inset 2px 0 #38bdf8, 0 0 24px rgba(56,189,248,.08); }
+    .admin-body.admin-sidebar-collapsed .admin-sidebar { width: 4.5rem; flex-basis: 4.5rem; }
+    .admin-body.admin-sidebar-collapsed .admin-sidebar-label { display: none; }
+    .admin-body.admin-sidebar-collapsed .admin-nav-link { justify-content: center; padding-left: 0.5rem; padding-right: 0.5rem; }
+    .admin-body.admin-sidebar-collapsed .admin-nav-link b { display: none; }
     .metric-card { transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
     .metric-card:hover { transform: translateY(-3px); border-color: rgba(56,189,248,.45); box-shadow: 0 12px 32px rgba(0,0,0,.18); }
     @media (max-width: 640px) { #dashboard-view:not(.hidden) { display: block; } .admin-sidebar { width: 100%; min-height: auto; } .admin-workspace { padding: 1.25rem; } }
@@ -170,17 +174,33 @@
         </div>
 
         <div>
-          <label for="item-media-files" class="block text-xs font-mono text-muted mb-2">Media files (multiple files supported)</label>
-          <input id="item-media-files" type="file" multiple accept="image/*,video/*,.glb,.gltf,.bin,application/pdf" class="w-full text-sm text-muted cursor-pointer" />
-          <p class="text-xs text-muted mt-1">Images, GLB/GLTF models, PDFs, or paste a public media URL below.</p>
-          <input id="item-image-url" placeholder="https://…" class="mt-2 w-full bg-elevated border border-line rounded-md px-4 py-2.5 text-sm focus:border-accent-bright outline-none text-ink" />
-          <input id="item-document-url" placeholder="PDF URL (optional)" class="mt-2 w-full bg-elevated border border-line rounded-md px-4 py-2.5 text-sm focus:border-accent-bright outline-none text-ink" />
+          <label for="item-primary-image-file" class="block text-xs font-mono text-muted mb-2">Primary high-resolution render (required)</label>
+          <input id="item-primary-image-file" type="file" accept="image/*" class="w-full text-sm text-muted cursor-pointer" />
+          <input id="item-primary-image-url" type="url" placeholder="Or paste a public image URL" class="mt-2 w-full bg-elevated border border-line rounded-md px-4 py-2.5 text-sm focus:border-accent-bright outline-none text-ink" />
         </div>
 
         <div>
-          <label for="item-model-url" class="block text-xs font-mono text-muted mb-2">3D model URL (optional)</label>
-          <input id="item-model-url" placeholder="GLB, Sketchfab, Behance, or viewer URL" class="w-full bg-elevated border border-line rounded-md px-4 py-2.5 text-sm focus:border-accent-bright outline-none text-ink" />
+          <label for="item-gallery-files" class="block text-xs font-mono text-muted mb-2">Additional render images (optional)</label>
+          <input id="item-gallery-files" type="file" multiple accept="image/*" class="w-full text-sm text-muted cursor-pointer" />
+          <textarea id="item-gallery-urls" rows="2" placeholder="Additional image URLs, one per line" class="mt-2 w-full bg-elevated border border-line rounded-md px-4 py-2.5 text-sm focus:border-accent-bright outline-none resize-y text-ink"></textarea>
         </div>
+
+        <div>
+          <label for="item-model-file" class="block text-xs font-mono text-muted mb-2">3D model file (optional)</label>
+          <input id="item-model-file" type="file" accept=".stl,.glb,.gltf,.step,.stp,model/stl,model/gltf-binary,model/gltf+json" class="w-full text-sm text-muted cursor-pointer" />
+          <input id="item-model-3d-url" type="url" placeholder="Or paste a GLB, STL, or Sketchfab embed URL" class="mt-2 w-full bg-elevated border border-line rounded-md px-4 py-2.5 text-sm focus:border-accent-bright outline-none text-ink" />
+          <p class="text-xs text-muted mt-1">GLB, GLTF, and STL files open in the interactive viewer. STEP files can be linked to a hosted viewer.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <input id="item-client" placeholder="Client (optional)" class="admin-input" />
+          <input id="item-project-date" type="date" aria-label="Project date" class="admin-input" />
+        </div>
+
+        <label class="flex items-center gap-3 rounded-md border border-line bg-elevated px-3 py-3 text-sm text-ink cursor-pointer">
+          <input id="item-featured" type="checkbox" class="h-4 w-4 accent-sky-400" />
+          <span><strong class="block font-medium">Feature in portfolio</strong><small class="text-xs text-muted">Give this project a larger Bento-grid layout.</small></span>
+        </label>
 
         <div>
           <label for="item-video-url" class="block text-xs font-mono text-muted mb-2">Video URL (optional)</label>
@@ -192,6 +212,16 @@
           <input id="item-software" placeholder="Software used" class="admin-input" />
           <input id="item-manufacturing" placeholder="Manufacturing method" class="admin-input" />
           <input id="item-file-type" placeholder="File type" class="admin-input" />
+        </div>
+
+        <div>
+          <label for="item-tags" class="block text-xs font-mono text-muted mb-2">Tech stack / tags</label>
+          <input id="item-tags" placeholder="SolidWorks, 3D Modeling, Machining" class="admin-input" />
+        </div>
+
+        <div>
+          <label for="item-document-url" class="block text-xs font-mono text-muted mb-2">PDF URL (optional)</label>
+          <input id="item-document-url" type="url" placeholder="https://…" class="admin-input" />
         </div>
 
         <label class="flex items-center gap-3 rounded-md border border-line bg-elevated px-3 py-3 text-sm text-ink cursor-pointer">
